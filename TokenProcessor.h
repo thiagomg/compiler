@@ -11,16 +11,26 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <memory>
+
+namespace generator {
+    class AsmGenerator;
+}
 
 class TokenProcessor {
 public:
-    TokenProcessor();
-    TokenProcessor(const TokenProcessor& orig);
+    TokenProcessor(generator::AsmGenerator *generator);
+    TokenProcessor(const TokenProcessor& orig) = delete;
     virtual ~TokenProcessor();
     
     bool add(const std::string &token);
 
+protected:
+    void processCmd(const std::string &cmd, std::vector< std::string > &params);
+
 private:
+
+    generator::AsmGenerator *_generator;
 
     std::string _cmd;
     std::vector< std::string > _params;

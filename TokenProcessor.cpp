@@ -8,24 +8,30 @@
 #include "TokenProcessor.h"
 
 #include <iostream>
+#include "AsmGenerator.h"
 
 using namespace std;
 
-TokenProcessor::TokenProcessor() {
+TokenProcessor::TokenProcessor(generator::AsmGenerator *generator) {
+    _generator = generator;
 }
 
-TokenProcessor::TokenProcessor(const TokenProcessor& orig) {
-}
+//TokenProcessor::TokenProcessor(const TokenProcessor& orig) {
+//}
 
 TokenProcessor::~TokenProcessor() {
 }
 
-void processCmd(const string &cmd, std::vector< std::string > &params) {
+void TokenProcessor::processCmd(const string &cmd, std::vector< std::string > &params) {
     cout << "Transform: " << cmd;
     for(auto &i : params)
         cout << " " << i ;
     cout << endl;
+
+    _generator->addCmd(cmd,params);
+
 }
+
 
 bool TokenProcessor::add(const string &token) {
 
@@ -56,3 +62,4 @@ bool TokenProcessor::add(const string &token) {
     
     return true;
 }
+

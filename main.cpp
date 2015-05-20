@@ -4,11 +4,14 @@
 #include <fstream>
 #include <string>
 #include <functional>
+#include <memory>
 
 #include "QuotedWord.h"
 #include "TokenProcessor.h"
+#include "AsmGenerator.h"
 
 using namespace std;
+using namespace generator;
 
 void parse_file(ifstream &is, function<bool(const string &)> f) {
 	
@@ -24,12 +27,14 @@ void parse_file(ifstream &is, function<bool(const string &)> f) {
 	
 }
 
+
 int main(int argc, char **argv)
 {
-    TokenProcessor proc;
+    unique_ptr<AsmGenerator> generator( new AsmGenerator() );
+    TokenProcessor proc(generator.get());
     
-	string fname = "./teste.lgo";
-    
+    string fname = "../compiler/teste.lgo";
+
 	ifstream is(fname.c_str());
 	if( is.good() ) {
 		parse_file(is, [&proc](const string &s) {
@@ -42,6 +47,8 @@ int main(int argc, char **argv)
 	//cin >> s;
 	cout << "Fim" << endl;
 	//getchar();
-	
-	return 0;
+
+    cout << generator->finish() << endl;
+
+    return 0;
 }
