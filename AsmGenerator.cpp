@@ -12,6 +12,9 @@
 #include <exception>
 #include <algorithm>
 
+//TODO: Remover
+#include <iostream>
+
 using namespace std;
 using namespace generator;
 
@@ -21,7 +24,7 @@ struct asm_exception : std::exception
 
     asm_exception(const std::string &s)
     {
-        std::copy(begin(text), end(text), begin(text));
+        std::copy(begin(s), end(s), begin(text));
     }
 /*
     asm_exception(char const* fmt, ...) __attribute__((format(printf,2,3))) {
@@ -36,7 +39,7 @@ struct asm_exception : std::exception
 
 AsmGenerator::AsmGenerator()
 {
-    string _modelName = "../compiler/main_ex.cpp";
+    string _modelName = "main_ex.cpp";
 
     ifstream is;
 
@@ -62,16 +65,110 @@ AsmGenerator::AsmGenerator()
 
 }
 
-void AsmGenerator::addCmd(const string &cmd, std::vector< std::string > &params)
+std::string getVarName(const std::string &varName) {
+    if( varName[0] == '\"' || varName[0] == '\'' ) {
+        return varName;
+    }
+    return "_iv_" + varName;
+}
+
+std::string getLine(const int line) {
+    return "Line: " + to_string(line) + ": ";
+}
+
+void AsmGenerator::_validateVar(const std::string &varName)
 {
-    if( cmd == "escreva" ) {
-        _code << "std::cout << ";
-        for_each(begin(params), end(params), [this](const string &s) {
-            _code << s << " << ";
-        });
-        _code << "std::endl;" << endl;
+    if( varName.empty() )
+        throw asm_exception("nome de variavel nao pode ser vazio");
+
+    if( varName[0] == '\"' || varName[0] == '\'' ) {
+        return;
+    }
+    if( _varNames.find(varName) == _varNames.end() ) {
+        throw asm_exception("Variavel nao encontrada - " + varName);
+    }
+}
+
+bool AsmGenerator::_addVar(const std::string &varName)
+{
+    if( varName.empty() ) return false;
+    if( varName[0] == '\"' || varName[0] == '\'' ) {
+        return true;
     }
 
+    if( _varNames.find(varName) == _varNames.end() ) {
+        _varNames.insert(varName);
+    }
+
+    return true;
+}
+
+void AsmGenerator::addCmd(const string &cmd, std::vector< std::string > &params)
+{
+    try {
+        if (cmd == "escreva") {
+
+            //Ex: escreva "ola tudo bem" nome
+            _code << "std::cout << ";
+            for_each(begin(params), end(params), [this](const string &s) {
+                std::string varName = getVarName(s);
+                _validateVar(varName);
+                _code << varName << " << ";
+            });
+            _code << "std::endl;" << endl;
+
+        } else if (cmd == "pergunta") {
+
+            //Ele precisa ter 3 parametros
+            //Ex: pergunta 'qual o seu nome' em resposta
+            if (params.size() != 3 || params[1] != "em")
+                throw asm_exception(R"(pergunta precisa ter 3 parametros. Ex: pergunta 'qual o seu nome' em resposta)");
+
+            _validateVar(params[0]); //pode ser uma string ou uma variavel
+
+            std::string varName = getVarName(params[2]);
+            _addVar(varName);
+
+            _code << "std::string " << varName << ";" << endl;
+            _code << "std::cout << " << params[0] << ";" << endl;
+            _code << "std::cin >> " << varName << ";" << endl;
+
+        } else if (cmd == "se") {
+
+            //Ele precisa ter 3 parametros
+            //Ex: se resposta for "papai"
+            if (params.size() != 3 || params[1] != "for")
+                throw asm_exception(R"(resposta precisa ter 3 parametros. Ex: se resposta for "papai")");
+
+            std::string varPerg = getVarName(params[0]);
+            std::string varResp = getVarName(params[2]);
+
+            _validateVar(varPerg); //pode ser uma string ou uma variavel
+            _validateVar(varResp); //pode ser uma string ou uma variavel
+
+            //TODO: Acertar comparacao para case insens. ou numeros
+            _code << "if( icompare(" << varPerg << ", " << varResp << ") )" << endl;
+
+        } else if (cmd == "[") {
+            _code << "{" << endl;
+        } else if (cmd == "]") {
+            _code << "}" << endl;
+        } else {
+            _code << "// " << cmd << ": ";
+            for_each(begin(params), end(params), [this](const string &s) {
+                _code << "[" << s << "]";
+            });
+            _code << endl;
+        }
+    } catch( asm_exception &e ) {
+        stringstream ss;
+        ss << endl << cmd << ": ";
+        for_each(begin(params), end(params), [&ss](const string &s) {
+            ss << "[" << s << "]";
+        });
+        ss << endl;
+        throw asm_exception( e.what() + ss.str() );
+    }
     //_code << cmd;
 }
 

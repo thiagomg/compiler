@@ -1,7 +1,16 @@
 
 
 escreva "ola tudo bem"
-pergunta 'qual o seu nome' em resposta
+pergunta 'qual o seu nome: ' em resposta
 escreva resposta
 
+se resposta for "papai"
+[
+  escreva "mais forte que o hulk"
+]
+
+se resposta for "tatiana"
+[
+  escreva "mais nova mamae"
+]
 

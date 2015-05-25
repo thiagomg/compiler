@@ -11,6 +11,7 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <unordered_set>
 
 namespace generator {
 
@@ -18,11 +19,18 @@ namespace generator {
         std::string _before;
         std::string _after;
         std::stringstream _code;
+        std::unordered_set<std::string> _varNames;
+    protected:
+
+        void _validateVar(const std::string &varName);
+        bool _addVar(const std::string &varName);
+
     public:
         AsmGenerator();
         void addCmd(const std::string &cmd, std::vector< std::string > &params);
 
         std::string finish();
+
     };
 
 

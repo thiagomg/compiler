@@ -38,7 +38,10 @@ private:
     
     std::map<std::string, int> _cmdSize {
         {"escreva", 1},
-        {"pergunta", 3}
+        {"pergunta", 3},
+        {"se", 3},
+        {"[", 0},
+        {"]", 0}
     };
 };
 

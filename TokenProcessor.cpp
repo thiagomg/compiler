@@ -23,10 +23,10 @@ TokenProcessor::~TokenProcessor() {
 }
 
 void TokenProcessor::processCmd(const string &cmd, std::vector< std::string > &params) {
-    cout << "Transform: " << cmd;
-    for(auto &i : params)
-        cout << " " << i ;
-    cout << endl;
+//    cout << "Transform: " << cmd;
+//    for(auto &i : params)
+//        cout << " " << i ;
+//    cout << endl;
 
     _generator->addCmd(cmd,params);
 
@@ -51,7 +51,7 @@ bool TokenProcessor::add(const string &token) {
                 _cmd = token;
             } else {
                 //TODO: ERRO!!!
-                cout <<"ERRO - " << token << endl;
+                cerr <<"ERRO - " << token << endl;
             }
         }
     } else {
