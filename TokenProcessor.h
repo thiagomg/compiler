@@ -23,10 +23,11 @@ public:
     TokenProcessor(const TokenProcessor& orig) = delete;
     virtual ~TokenProcessor();
     
-    bool add(const std::string &token);
+    bool add(int line_num, const std::vector<std::string> &line_chunks);
 
 protected:
-    void processCmd(const std::string &cmd, std::vector< std::string > &params);
+    void _processCmd(const std::string &cmd, std::vector< std::string > &params);
+	int _getSize(const std::string &cmd);
 
 private:
 

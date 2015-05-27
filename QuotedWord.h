@@ -15,27 +15,29 @@ class QuotedWord
 
     private:
 		std::string     data;
-      friend std::ostream& operator<<(std::ostream& str, QuotedWord const& value)
-      {
-        return str << value.data;
-      }
-      friend std::istream& operator>>(std::istream& str, QuotedWord& value)
-      {
-        char x;
-        str >> x;
-        if ((str) && (x == '"' || x == '\''))
-        {
-            std::string extra;
-            std::getline(str, extra, x);
-            value.data = std::string("\"").append(extra).append("\"");
-        }
-        else
-        {
-            str.putback(x);
-            str >> value.data;
-        }
-        return str;
-      }
+		friend std::ostream& operator<<(std::ostream& str, QuotedWord const& value)
+		{
+			return str << value.data;
+		}
+		
+		friend std::istream& operator>>(std::istream& str, QuotedWord& value)
+		{
+			char x;
+			str >> x;
+			if ((str) && (x == '"' || x == '\''))
+			{
+				std::string extra;
+				std::getline(str, extra, x);
+				value.data = std::string("\"").append(extra).append("\"");
+			}
+			else
+			{
+				str.putback(x);
+				str >> value.data;
+			}
+			return str;
+			
+		}
 };
 
 #endif // QUOTEDWORD_H

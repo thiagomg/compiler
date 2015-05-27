@@ -13,17 +13,66 @@
 using namespace std;
 using namespace generator;
 
-void parse_file(ifstream &is, function<bool(const string &)> f) {
+void crackLine(vector<string> &line, istringstream &ss) {
 
-
-	while( !is.eof() ) {
+	while( !( ss.eof() || ss.fail()) ) {
 		QuotedWord s;
-		is >> s;
-		if( !f(s()) ) {
+		ss >> s;
+		
+//		bool eof = ss.eof();
+//		bool fail = ss.fail();
+//		bool bad = ss.bad();
+//		cout << s() << eof << fail << bad << endl;
+		
+		if( s().empty() )
+			break;
+		
+		line.push_back( s() );
+	}
+		
+}
+
+//get lines and generate cmd p1 p2 p3...
+//and pass to asm generator
+void parse_file(ifstream &is, function<bool(int line_num, const vector<string> &)> f) {
+
+	//FIXME: Nos chunks, se algum comecar com # descartar ate o final da linha
+	
+	int line_num = 0;
+	vector<string> line_chunks;
+	while( !is.eof() ) {
+		
+		std::string line;
+		std::getline(is, line);
+		
+		line_num++;
+		
+		//cout << "L " << line_num << ": " << line << endl;
+		
+		istringstream ss(line);
+
+		crackLine(line_chunks, ss);
+		if( (!line_chunks.empty()) &&  line_chunks.back() == "\\" ) {
+			line_chunks.pop_back();
+			continue;
+		}
+		
+		//TODO: Remover
+		cout << endl;
+		for(auto i : line_chunks) {		
+			cout << line_num << ": " << i << endl;
+		}
+		
+		//agora temos a linha com os chunks.
+		//Precisamos passar no token processor
+		if( !f(line_num, line_chunks) ) {
             break;
         }
+		
+		line_chunks.clear();
+		
 	}
-    f("");
+    //f("");
 	cout << endl;
 	
 }
@@ -40,8 +89,11 @@ int main(int argc, char **argv)
     try {
 
         if( is.good() ) {
-            parse_file(is, [&proc](const string &s) {
-                return proc.add(s);
+			//parse_file quebra em linhas e manda um vector 
+			//para o processador de tokens
+            parse_file(is, [&proc](int line_num, const vector<string> &line_chunks) {
+                //add sera chamado para cada linha do arquivo com conteudo
+				return proc.add(line_num, line_chunks);
             });
         } else
             cerr << "Erro abrindo arquivo: " << fname << endl;
@@ -58,7 +110,7 @@ int main(int argc, char **argv)
     if(is.is_open())
         is.close();
 
-    cout << generator->finish() << endl;
+    //cout << generator->finish() << endl;
 
     return 0;
 }
