@@ -32,13 +32,11 @@ void TokenProcessor::_processCmd(const string &cmd, std::vector< std::string > &
 
 }
 
-template<typename T>
-bool is_concat(T &vec, typename T::iterator &it) {
+template<typename T, typename U> //typename T::iterator
+bool is_concat(T &vec, U it) {
 	if( it == vec.end() )
 		return false;
-	if( it+1 == vec.end() )
-		return false;
-	if( *(it+1) == "+" )
+	if( *(it) == "+" )
 		return true;
 }
 
@@ -66,8 +64,16 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 		vector<string> params;
 		int param_count = _getSize(cmd);
 		for(int i=0; i < param_count; i++) {
-			params.push_back(*it);
+			const string &p = *it;
+			params.push_back(p);
 			it++;
+			
+			if( is_concat(line_chunks, it) ) {
+				param_count+=2;// + next 
+				it++;
+				i++; //pular +
+				continue;
+			}
 		}
 		
 		cout << line_num << ": " << cmd;

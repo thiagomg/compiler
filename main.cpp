@@ -27,6 +27,9 @@ void crackLine(vector<string> &line, istringstream &ss) {
 		if( s().empty() )
 			break;
 		
+		if( s()[0] == '#' )
+			return;
+		
 		line.push_back( s() );
 	}
 		
@@ -58,10 +61,10 @@ void parse_file(ifstream &is, function<bool(int line_num, const vector<string> &
 		}
 		
 		//TODO: Remover
-		cout << endl;
-		for(auto i : line_chunks) {		
-			cout << line_num << ": " << i << endl;
-		}
+		//cout << endl;
+		//for(auto i : line_chunks) {		
+		//	cout << line_num << ": " << i << endl;
+		//}
 		
 		//agora temos a linha com os chunks.
 		//Precisamos passar no token processor
