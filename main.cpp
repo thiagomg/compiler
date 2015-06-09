@@ -8,7 +8,7 @@
 
 #include "QuotedWord.h"
 #include "TokenProcessor.h"
-#include "AsmGenerator.h"
+#include "CppGenerator.h"
 
 using namespace std;
 using namespace generator;
@@ -83,7 +83,7 @@ void parse_file(ifstream &is, function<bool(int line_num, const vector<string> &
 
 int main(int argc, char **argv)
 {
-    unique_ptr<AsmGenerator> generator( new AsmGenerator() );
+    unique_ptr<CppGenerator> generator( new CppGenerator() );
     TokenProcessor proc(generator.get());
     
     string fname = "teste.lgo";
@@ -114,6 +114,11 @@ int main(int argc, char **argv)
         is.close();
 
     //cout << generator->finish() << endl;
+
+	fstream fout;
+	fout.open("teste.cpp", fstream::out );
+	fout << generator->finish();
+	fout.close();
 
     return 0;
 }

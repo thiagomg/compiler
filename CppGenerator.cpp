@@ -5,11 +5,11 @@
  * Created on 6 de Maio de 2015, 23:38
  */
 
-#include "AsmGenerator.h"
+#include "CppGenerator.h"
 
 #include <string>
 #include <fstream>
-#include <exception>
+#include "asm_exception.h"
 #include <algorithm>
 
 //TODO: Remover
@@ -18,26 +18,9 @@
 using namespace std;
 using namespace generator;
 
-struct asm_exception : std::exception
-{
-    char text[1000];
 
-    asm_exception(const std::string &s)
-    {
-        std::copy(begin(s), end(s), begin(text));
-    }
-/*
-    asm_exception(char const* fmt, ...) __attribute__((format(printf,2,3))) {
-        va_list ap;
-        va_start(ap, fmt);
-        vsnprintf(text, sizeof text, fmt, ap);
-        va_end(ap);
-    }
-*/
-    char const* what() const throw() { return text; }
-};
 
-AsmGenerator::AsmGenerator()
+CppGenerator::CppGenerator()
 {
     string _modelName = "main_ex.cpp";
 
@@ -76,20 +59,20 @@ std::string getLine(const int line) {
     return "Line: " + to_string(line) + ": ";
 }
 
-void AsmGenerator::_validateVar(const std::string &varName)
+void CppGenerator::_validateVar(int line, const std::string &varName)
 {
     if( varName.empty() )
-        throw asm_exception("nome de variavel nao pode ser vazio");
+        throw asm_exception(line, "nome de variavel nao pode ser vazio");
 
     if( varName[0] == '\"' || varName[0] == '\'' ) {
         return;
     }
     if( _varNames.find(varName) == _varNames.end() ) {
-        throw asm_exception("Variavel nao encontrada - " + varName);
+        throw asm_exception(line, "Variavel nao encontrada - " + varName);
     }
 }
 
-bool AsmGenerator::_addVar(const std::string &varName)
+bool CppGenerator::_addVar(const std::string &varName)
 {
     if( varName.empty() ) return false;
     if( varName[0] == '\"' || varName[0] == '\'' ) {
@@ -103,16 +86,46 @@ bool AsmGenerator::_addVar(const std::string &varName)
     return true;
 }
 
-void AsmGenerator::addCmd(const string &cmd, std::vector< std::string > &params)
+void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string > &params)
 {
     try {
+
+        if( _waitingStart ) {
+            if( cmd == "[" ) {
+                _waitingStart = false;
+                _blockStarted = true;
+                _blockContent = new std::vector<BlockCmd>();
+            } else {
+                throw asm_exception(line, "Inicio de bloco nao encontrado - [");
+            }
+            return;
+        } else if( _blockStarted ) {
+            if( cmd == "]" ) {
+                if( _blockContent->empty() ) {
+                    throw asm_exception(line, "comando se com bloco vazio encontrado");
+                }
+                std::vector<BlockCmd> *block = _blockContent;
+                int bl = _blockLine;
+
+                _blockStarted = false;
+                _waitingStart = false;
+                _blockContent = nullptr;
+                _blockLine = 0;
+
+                _processBlock(bl, _block, block);
+            } else {
+                _blockContent->push_back( BlockCmd(line, cmd, params) );
+            }
+            return;
+        }
+
         if (cmd == "escreva") {
 
             //Ex: escreva "ola tudo bem" nome
             _code << "std::cout << ";
-            for_each(begin(params), end(params), [this](const string &s) {
+            for_each(begin(params), end(params), [this, line](const string &s) {
                 std::string varName = getVarName(s);
-                _validateVar(varName);
+                _validateVar(line, varName);
                 _code << varName << " << ";
             });
             _code << "std::endl;" << endl;
@@ -122,9 +135,9 @@ void AsmGenerator::addCmd(const string &cmd, std::vector< std::string > &params)
             //Ele precisa ter 3 parametros
             //Ex: pergunta 'qual o seu nome' em resposta
             if (params.size() != 3 || params[1] != "em")
-                throw asm_exception(R"(pergunta precisa ter 3 parametros. Ex: pergunta 'qual o seu nome' em resposta)");
+                throw asm_exception(line, R"(pergunta precisa ter 3 parametros. Ex: pergunta 'qual o seu nome' em resposta)");
 
-            _validateVar(params[0]); //pode ser uma string ou uma variavel
+            _validateVar(line, params[0]); //pode ser uma string ou uma variavel
 
             std::string varName = getVarName(params[2]);
             _addVar(varName);
@@ -138,27 +151,32 @@ void AsmGenerator::addCmd(const string &cmd, std::vector< std::string > &params)
             //Ele precisa ter 3 parametros
             //Ex: se resposta for "papai"
             if (params.size() != 3 || params[1] != "for")
-                throw asm_exception(R"(resposta precisa ter 3 parametros. Ex: se resposta for "papai")");
+                throw asm_exception(line, R"(resposta precisa ter 3 parametros. Ex: se resposta for "papai")");
 
             std::string varPerg = getVarName(params[0]);
             std::string varResp = getVarName(params[2]);
 
-            _validateVar(varPerg); //pode ser uma string ou uma variavel
-            _validateVar(varResp); //pode ser uma string ou uma variavel
+            _validateVar(line, varPerg); //pode ser uma string ou uma variavel
+            _validateVar(line, varResp); //pode ser uma string ou uma variavel
 
-            //TODO: Acertar comparacao para case insens. ou numeros
-            _code << "if( icompare(" << varPerg << ", " << varResp << ") )" << endl;
+            _blockLine = line;
+            _block = cmd;
+            _blockParams.push_back(varPerg);
+            _blockParams.push_back(varResp);
+            _waitingStart = true;
 
-        } else if (cmd == "[") {
-            _code << "{" << endl;
-        } else if (cmd == "]") {
-            _code << "}" << endl;
+//        } else if (cmd == "[") {
+//            _code << "{" << endl;
+//        } else if (cmd == "]") {
+//            _code << "}" << endl;
         } else {
+
             _code << "// " << cmd << ": ";
             for_each(begin(params), end(params), [this](const string &s) {
                 _code << "[" << s << "]";
             });
             _code << endl;
+
         }
     } catch( asm_exception &e ) {
         stringstream ss;
@@ -167,12 +185,35 @@ void AsmGenerator::addCmd(const string &cmd, std::vector< std::string > &params)
             ss << "[" << s << "]";
         });
         ss << endl;
-        throw asm_exception( e.what() + ss.str() );
+        throw asm_exception(e.line(), e.what() + ss.str() );
     }
     //_code << cmd;
 }
 
-std::string AsmGenerator::finish()
+//must delete blockContent
+void CppGenerator::_processBlock(int line, const std::string cmd, std::vector<BlockCmd> *blockContent)
+{
+    if( blockContent == nullptr )
+        return;
+
+    //TODO: Acertar comparacao para case insens. ou numeros
+    if( cmd == "se" ) {
+        const string &varPerg = _blockParams[0];
+        const string &varResp = _blockParams[1];
+        _code << "if( icompare(" << varPerg << ", " << varResp << ") )" << endl;
+    }
+
+    //if nested virou if um depois do outro
+    _code << "{ //" << line << endl;
+    for(BlockCmd &b : *blockContent) {
+        this->addCmd(b.line, b.cmd, b.params);
+    }
+    _code << "} //" << line << endl;
+
+    delete blockContent;
+}
+
+std::string CppGenerator::finish()
 {
     std::string ret;
     std::string code = _code.str();

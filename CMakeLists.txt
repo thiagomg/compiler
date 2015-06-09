@@ -4,12 +4,13 @@ project(compiler)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(SOURCE_FILES
-    AsmGenerator.cpp
-    AsmGenerator.h
+    CppGenerator.cpp
+    CppGenerator.h
     main.cpp
     QuotedWord.h
     TokenProcessor.cpp
-    TokenProcessor.h)
+    TokenProcessor.h
+    asm_exception.h)
 
 add_executable(compiler ${SOURCE_FILES})
 

@@ -14,24 +14,24 @@
 #include <memory>
 
 namespace generator {
-    class AsmGenerator;
+    class CppGenerator;
 }
 
 class TokenProcessor {
 public:
-    TokenProcessor(generator::AsmGenerator *generator);
+    TokenProcessor(generator::CppGenerator *generator);
     TokenProcessor(const TokenProcessor& orig) = delete;
     virtual ~TokenProcessor();
     
     bool add(int line_num, const std::vector<std::string> &line_chunks);
 
 protected:
-    void _processCmd(const std::string &cmd, std::vector< std::string > &params);
+    void _processCmd(int line_num, const std::string &cmd, std::vector< std::string > &params);
 	int _getSize(const std::string &cmd);
 
 private:
 
-    generator::AsmGenerator *_generator;
+    generator::CppGenerator *_generator;
 
     std::string _cmd;
     std::vector< std::string > _params;

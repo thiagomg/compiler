@@ -8,11 +8,11 @@
 #include "TokenProcessor.h"
 
 #include <iostream>
-#include "AsmGenerator.h"
+#include "CppGenerator.h"
 
 using namespace std;
 
-TokenProcessor::TokenProcessor(generator::AsmGenerator *generator) {
+TokenProcessor::TokenProcessor(generator::CppGenerator *generator) {
     _generator = generator;
 }
 
@@ -22,13 +22,13 @@ TokenProcessor::TokenProcessor(generator::AsmGenerator *generator) {
 TokenProcessor::~TokenProcessor() {
 }
 
-void TokenProcessor::_processCmd(const string &cmd, std::vector< std::string > &params) {
+void TokenProcessor::_processCmd(int line_num, const string &cmd, std::vector< std::string > &params) {
 //    cout << "Transform: " << cmd;
 //    for(auto &i : params)
 //        cout << " " << i ;
 //    cout << endl;
 
-    _generator->addCmd(cmd,params);
+    _generator->addCmd(line_num, cmd,params);
 
 }
 
@@ -76,11 +76,14 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 			}
 		}
 		
+		//Trocar o cout pela entrada no analisador sintatico
 		cout << line_num << ": " << cmd;
 		for(auto p : params) {
 			cout << " [" << p << "]";
 		}
 		cout << endl;
+
+		_processCmd(line_num, cmd, params);
 		
 		iterCount += param_count + 1;
 		

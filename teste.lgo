@@ -1,24 +1,29 @@
 
-escreva thiago + adriana + sofia + julia
-escreva "ola tudo bem" escreva "ola2"
+#escreva "thiago" + "adriana" + "sofia" + "julia"
+#escreva "ola tudo bem" escreva "ola2"
 pergunta 'qual o seu nome: ' em resposta
-escreva \
-"asd"
+#escreva \
+#"asd"
 escreva "ola " + resposta + \
 " !"
+se resposta for "papai"
+[
+  escreva "mais forte que o hulk"
+
+  se resposta for "tatiana"
+  [
+    escreva "mais nova mamae"
+  ]
+
+]
 
 escreva "agora sim!" #comentario
 #outro
-escreva 1
+#escreva 1
 
 #escreva "ola tudo bem"
 #pergunta 'qual o seu nome: ' em resposta
 #escreva resposta
-
-#se resposta for "papai"
-#[
-#  escreva "mais forte que o hulk"
-#]
 
 #se resposta for "tatiana"
 #[
