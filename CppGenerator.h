@@ -12,6 +12,7 @@
 #include <string>
 #include <sstream>
 #include <unordered_set>
+#include <memory>
 
 namespace generator {
 
@@ -19,12 +20,25 @@ namespace generator {
         using string = std::string;
         string cmd;
         std::vector<string> params;
-        int line;
+        int line = 0;
         BlockCmd(int line, const string &cmd, const std::vector<string> &params) {
             this->line = line;
             this->cmd = cmd;
             this->params = params;
         }
+
+    };
+
+    struct Block {
+        std::string cmd;
+        std::vector<std::string> blockParams;
+        int blockLine = 0;
+        bool waitingStart = false;
+        bool blockStarted = false;
+        std::vector<BlockCmd> blockContent;
+        void addSubBlock() { _subBlockCount++; }
+        bool remSubBlock() { _subBlockCount--; return _subBlockCount<0 ? true : false; }
+        int _subBlockCount = 0;
     };
 
     class CppGenerator {
@@ -36,20 +50,14 @@ namespace generator {
         string _after;
         std::stringstream _code;
         std::unordered_set<string> _varNames;
-
-        string _block;
-        std::vector<string> _blockParams;
-        int _blockLine = 0;
-        bool _waitingStart = false;
-        bool _blockStarted = false;
-        std::vector<BlockCmd> *_blockContent;
+        std::unique_ptr<Block> _curBlock;
 
     protected:
 
         void _validateVar(int line, const string &varName);
         bool _addVar(const string &varName);
 
-        void _processBlock(int line, const std::string cmd, std::vector<BlockCmd> *blockContent);
+        void _processBlock(std::unique_ptr<Block> &block);
 
     public:
         CppGenerator();

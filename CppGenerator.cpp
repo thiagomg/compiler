@@ -90,31 +90,37 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
 {
     try {
 
-        if( _waitingStart ) {
+        //gerar um curBlock vazio - main
+
+        if( _curBlock && _curBlock->waitingStart ) {
             if( cmd == "[" ) {
-                _waitingStart = false;
-                _blockStarted = true;
-                _blockContent = new std::vector<BlockCmd>();
+                _curBlock->waitingStart = false;
+                _curBlock->blockStarted = true;
             } else {
                 throw asm_exception(line, "Inicio de bloco nao encontrado - [");
             }
             return;
-        } else if( _blockStarted ) {
+        } else if( _curBlock && _curBlock->blockStarted ) {
+            if( cmd == "[" ) {
+                //subblock
+                _curBlock->addSubBlock();
+            }
             if( cmd == "]" ) {
-                if( _blockContent->empty() ) {
+                if( !_curBlock->remSubBlock() ) {
+                    //este fechamento eh de um sub-bloco aberto
+                    _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
+                    return;
+                }
+                if( _curBlock->blockContent.empty() ) {
                     throw asm_exception(line, "comando se com bloco vazio encontrado");
                 }
-                std::vector<BlockCmd> *block = _blockContent;
-                int bl = _blockLine;
 
-                _blockStarted = false;
-                _waitingStart = false;
-                _blockContent = nullptr;
-                _blockLine = 0;
+                std::unique_ptr<Block> thisBlock;
+                _curBlock.swap(thisBlock);
 
-                _processBlock(bl, _block, block);
+                _processBlock(thisBlock);
             } else {
-                _blockContent->push_back( BlockCmd(line, cmd, params) );
+                _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
             }
             return;
         }
@@ -159,11 +165,12 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
             _validateVar(line, varPerg); //pode ser uma string ou uma variavel
             _validateVar(line, varResp); //pode ser uma string ou uma variavel
 
-            _blockLine = line;
-            _block = cmd;
-            _blockParams.push_back(varPerg);
-            _blockParams.push_back(varResp);
-            _waitingStart = true;
+            _curBlock.reset(new Block());
+            _curBlock->blockLine = line;
+            _curBlock->cmd = cmd;
+            _curBlock->blockParams.push_back(varPerg);
+            _curBlock->blockParams.push_back(varResp);
+            _curBlock->waitingStart = true;
 
 //        } else if (cmd == "[") {
 //            _code << "{" << endl;
@@ -191,26 +198,25 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
 }
 
 //must delete blockContent
-void CppGenerator::_processBlock(int line, const std::string cmd, std::vector<BlockCmd> *blockContent)
+void CppGenerator::_processBlock(std::unique_ptr<Block> &block)
 {
-    if( blockContent == nullptr )
+    if( block.get() == nullptr )
         return;
 
     //TODO: Acertar comparacao para case insens. ou numeros
-    if( cmd == "se" ) {
-        const string &varPerg = _blockParams[0];
-        const string &varResp = _blockParams[1];
+    if( block->cmd == "se" ) {
+        const string &varPerg = block->blockParams[0];
+        const string &varResp = block->blockParams[1];
         _code << "if( icompare(" << varPerg << ", " << varResp << ") )" << endl;
     }
 
     //if nested virou if um depois do outro
-    _code << "{ //" << line << endl;
-    for(BlockCmd &b : *blockContent) {
+    _code << "{ //" << block->blockLine << endl;
+    for(BlockCmd &b : block->blockContent) {
         this->addCmd(b.line, b.cmd, b.params);
     }
-    _code << "} //" << line << endl;
+    _code << "} //" << block->blockLine << endl;
 
-    delete blockContent;
 }
 
 std::string CppGenerator::finish()
