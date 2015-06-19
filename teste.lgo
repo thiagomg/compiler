@@ -1,7 +1,7 @@
 
 escreva "thiago" + "adriana" + "sofia" + "julia"
 #escreva "ola tudo bem" escreva "ola2"
-#pergunta 'qual o seu nome: ' em resposta
+pergunta 'qual o seu nome: ' em resposta
 #escreva "ola " + resposta + \
 #" !"
 

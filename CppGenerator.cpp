@@ -172,10 +172,6 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
             _curBlock->blockParams.push_back(varResp);
             _curBlock->waitingStart = true;
 
-//        } else if (cmd == "[") {
-//            _code << "{" << endl;
-//        } else if (cmd == "]") {
-//            _code << "}" << endl;
         } else {
 
             _code << "// " << cmd << ": ";
