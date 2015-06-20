@@ -14,9 +14,15 @@ se resposta for "papai"
   [
     escreva "mais nova mamae"
   ]
+  senao
+  [
+    escreva "sera?"
+  ]
 
 ]
 
-escreva "agora sim!" #comentario
+pergunta 'qual o seu nome: ' em resposta2
+
+#escreva "agora sim!" #comentario
 #outro
 #escreva 1

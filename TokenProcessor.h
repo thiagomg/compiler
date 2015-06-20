@@ -41,6 +41,7 @@ private:
         {"escreva", 1},
         {"pergunta", 3},
         {"se", 3},
+        {"senao", 0},
         {"[", 0},
         {"]", 0}
     };

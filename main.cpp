@@ -98,6 +98,9 @@ int main(int argc, char **argv)
                 //add sera chamado para cada linha do arquivo com conteudo
 				return proc.add(line_num, line_chunks);
             });
+
+            vector<string> v;
+            proc.add(-1, v);
         } else
             cerr << "Erro abrindo arquivo: " << fname << endl;
 	

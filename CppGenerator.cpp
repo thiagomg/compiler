@@ -86,43 +86,84 @@ bool CppGenerator::_addVar(const std::string &varName)
     return true;
 }
 
+void CppGenerator::_addBlockCmd(int line, const string &cmd, std::vector<string> &params)
+{
+    if( _curBlock && _curBlock->waitingStart ) {
+        if( cmd == "[" ) {
+            _curBlock->waitingStart = false;
+            _curBlock->blockStarted = true;
+        } else {
+            throw asm_exception(line, "Inicio de bloco nao encontrado - [");
+        }
+        return;
+    } else if( _curBlock && _curBlock->blockStarted ) {
+        if( cmd == "[" ) {
+            //subblock
+            _curBlock->addSubBlock();
+        }
+        if( cmd == "]" ) {
+            if( !_curBlock->remSubBlock() ) {
+                //este fechamento eh de um sub-bloco aberto
+                _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
+                return;
+            }
+            if( _curBlock->blockContent.empty() ) {
+                throw asm_exception(line, "comando se com bloco vazio encontrado");
+            }
+
+            //se nao tem _savedBlock, nao eh um else
+            if( _savedBlock.get() == nullptr ) {
+
+                if( _curBlock->cmd == "se" ) {
+                    _curBlock.swap(_savedBlock); //vamos salvar. Pode ter um senao
+                } else {
+
+                    //Nao eh se. Vamos processar
+                    std::unique_ptr<Block> thisBlock;
+                    _curBlock.swap(thisBlock);
+                    _processSingleBlock(thisBlock);
+                }
+
+            } else {
+
+                //tem um _savedBlock
+                if( _curBlock->cmd == "senao" ) {
+                    //Se/senao
+                    std::unique_ptr<Block> thisBlock;
+                    std::unique_ptr<Block> savedBlock;
+                    _curBlock.swap(thisBlock);
+                    _savedBlock.swap(savedBlock);
+
+                    _processBlock(thisBlock, savedBlock);
+                } else {
+                    throw asm_exception("bloco desconhecido - " + _curBlock->cmd);
+                }
+
+            }
+
+            //Processo terminado.
+            //Agora vamos esperar o proximo para verificar se eh else
+        } else {
+            _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
+        }
+        return;
+    }
+
+}
+
 void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string > &params)
 {
     try {
 
-        //gerar um curBlock vazio - main
-
-        if( _curBlock && _curBlock->waitingStart ) {
-            if( cmd == "[" ) {
-                _curBlock->waitingStart = false;
-                _curBlock->blockStarted = true;
-            } else {
-                throw asm_exception(line, "Inicio de bloco nao encontrado - [");
-            }
+        if( _curBlock ) {
+            _addBlockCmd(line, cmd, params);
             return;
-        } else if( _curBlock && _curBlock->blockStarted ) {
-            if( cmd == "[" ) {
-                //subblock
-                _curBlock->addSubBlock();
-            }
-            if( cmd == "]" ) {
-                if( !_curBlock->remSubBlock() ) {
-                    //este fechamento eh de um sub-bloco aberto
-                    _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
-                    return;
-                }
-                if( _curBlock->blockContent.empty() ) {
-                    throw asm_exception(line, "comando se com bloco vazio encontrado");
-                }
+        }
 
-                std::unique_ptr<Block> thisBlock;
-                _curBlock.swap(thisBlock);
-
-                _processBlock(thisBlock);
-            } else {
-                _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
-            }
-            return;
+        if( _savedBlock && cmd != "senao" ) {
+            std::unique_ptr<Block> thisBlock;
+            _savedBlock.swap(thisBlock);
+            _processSingleBlock(thisBlock);
         }
 
         if (cmd == "escreva") {
@@ -165,11 +206,29 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
             _validateVar(line, varPerg); //pode ser uma string ou uma variavel
             _validateVar(line, varResp); //pode ser uma string ou uma variavel
 
-            _curBlock.reset(new Block());
+            //_curBlock.reset(new Block());
+            _curBlock = make_unique<Block>();
             _curBlock->blockLine = line;
             _curBlock->cmd = cmd;
             _curBlock->blockParams.push_back(varPerg);
             _curBlock->blockParams.push_back(varResp);
+            _curBlock->waitingStart = true;
+
+        } else if (cmd == "senao") {
+
+            //Ele precisa ter 3 parametros
+            //Ex: se resposta for "papai"
+            if (params.size() != 0 )
+                throw asm_exception(line, R"(senao nao tem parametros!)");
+
+            if( _savedBlock == nullptr || _savedBlock->cmd != "se") {
+                throw asm_exception(line, R"(senao so pode existir depois de um bloco se!)");
+            }
+
+            //_curBlock.reset(new Block());
+            _curBlock = make_unique<Block>();
+            _curBlock->blockLine = line;
+            _curBlock->cmd = cmd;
             _curBlock->waitingStart = true;
 
         } else {
@@ -193,17 +252,15 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
     //_code << cmd;
 }
 
-//must delete blockContent
-void CppGenerator::_processBlock(std::unique_ptr<Block> &block)
+void CppGenerator::_processSingleBlock(std::unique_ptr<Block> &block)
 {
-    if( block.get() == nullptr )
-        return;
-
     //TODO: Acertar comparacao para case insens. ou numeros
     if( block->cmd == "se" ) {
         const string &varPerg = block->blockParams[0];
         const string &varResp = block->blockParams[1];
         _code << "if( icompare(" << varPerg << ", " << varResp << ") )" << endl;
+    } else if( block->cmd == "senao" ) {
+        _code << "else" << endl;
     }
 
     //if nested virou if um depois do outro
@@ -212,6 +269,19 @@ void CppGenerator::_processBlock(std::unique_ptr<Block> &block)
         this->addCmd(b.line, b.cmd, b.params);
     }
     _code << "} //" << block->blockLine << endl;
+
+}
+
+void CppGenerator::_processBlock(std::unique_ptr<Block> &block, std::unique_ptr<Block> &savedBlock)
+{
+    if( block.get() == nullptr )
+        return;
+
+    if( savedBlock.get() != nullptr ) {
+        _processSingleBlock(savedBlock);
+    }
+
+    _processSingleBlock(block);
 
 }
 

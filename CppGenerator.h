@@ -51,13 +51,16 @@ namespace generator {
         std::stringstream _code;
         std::unordered_set<string> _varNames;
         std::unique_ptr<Block> _curBlock;
+        std::unique_ptr<Block> _savedBlock;
 
     protected:
 
         void _validateVar(int line, const string &varName);
         bool _addVar(const string &varName);
 
-        void _processBlock(std::unique_ptr<Block> &block);
+        void _processSingleBlock(std::unique_ptr<Block> &block);
+        void _processBlock(std::unique_ptr<Block> &block, std::unique_ptr<Block> &savedBlock);
+        void _addBlockCmd(int line, const string &cmd, std::vector<string> &params);
 
     public:
         CppGenerator();
