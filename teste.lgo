@@ -1,32 +1,21 @@
 
-escreva "thiago" + "adriana" + "sofia" + "julia"
-#escreva "ola tudo bem" escreva "ola2"
-pergunta 'qual o seu nome: ' em resposta
-#escreva "ola " + resposta + \
-#" !"
 
-se resposta for "papai"
+se 1 for 1
 [
-  escreva "mais forte que o hulk"
+    se 2 for 2
+    [
+        escreva "uma vez"
+    ]
 
-  #ok. eu sei que nunca vai entrar aqui.
-  se resposta for "tatiana"
-  [
-    escreva "mais nova mamae"
-  ]
-  senao
-  [
-    escreva "sera?"
-  ]
+    escreva 'outra vez'
 
+    se 3 for 3
+    [
+        escreva "1!!!"
+        se 4 for 4
+        [
+            escreva "4!!!"
+        ]
+    ]
 ]
-
-#pergunta 'qual o seu nome: ' em resposta2
-
-repita 3 vezes [
-    escreva "uma vez"
-]
-
-#escreva "agora sim!" #comentario
-#outro
-#escreva 1
+#    se "1" for "1"

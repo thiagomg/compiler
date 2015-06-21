@@ -56,8 +56,10 @@ namespace generator {
 
     protected:
 
+        bool _isValue(const string &varName);
         void _validateVar(int line, const string &varName);
         bool _addVar(const string &varName);
+        std::string getVarName(const std::string &varName);
 
         void _processSingleBlock(std::unique_ptr<Block> &block);
         void _processBlock(std::unique_ptr<Block> &block, std::unique_ptr<Block> &savedBlock);

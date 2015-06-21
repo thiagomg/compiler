@@ -49,8 +49,17 @@ CppGenerator::CppGenerator()
 
 }
 
-std::string getVarName(const std::string &varName) {
+bool CppGenerator::_isValue(const string &varName)
+{
     if( varName[0] == '\"' || varName[0] == '\'' || Utils::is_number(varName) ) {
+        return true;
+    }
+    return false;
+}
+
+std::string CppGenerator::getVarName(const std::string &varName)
+{
+    if( _isValue(varName) ) {
         return varName;
     }
     return "_iv_" + varName;
@@ -65,18 +74,19 @@ void CppGenerator::_validateVar(int line, const std::string &varName)
     if( varName.empty() )
         throw asm_exception(line, "nome de variavel nao pode ser vazio");
 
-    if( varName[0] == '\"' || varName[0] == '\'' ) {
+    if( _isValue(varName) ) {
         return;
     }
     if( _varNames.find(varName) == _varNames.end() ) {
         throw asm_exception(line, "Variavel nao encontrada - " + varName);
     }
+    return;
 }
 
 bool CppGenerator::_addVar(const std::string &varName)
 {
     if( varName.empty() ) return false;
-    if( varName[0] == '\"' || varName[0] == '\'' ) {
+    if( _isValue(varName) ) {
         return true;
     }
 
@@ -276,6 +286,24 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
 void CppGenerator::_processSingleBlock(std::unique_ptr<Block> &block)
 {
 
+    //DEBUG:
+    cout << "BLK CMD: " << block->cmd << "(";
+    for(string &sb : block->blockParams) {
+        cout << " " << sb;
+    }
+    cout << ") {" << endl;
+    cout << "//(size: " << block->blockContent.size() << ")" << endl;
+
+    for(BlockCmd &b : block->blockContent) {
+        cout << "    " << b.cmd << "(";
+        for(string &sb : b.params) {
+            cout << " " << sb;
+        }
+        cout << ")" << endl;
+    }
+    cout << "}" << endl ;
+    cout << "-------------------" << endl;
+
     //TODO: Acertar comparacao para case insens. ou numeros
     if( block->cmd == "se" ) {
         const string &varPerg = block->blockParams[0];
@@ -289,13 +317,13 @@ void CppGenerator::_processSingleBlock(std::unique_ptr<Block> &block)
         _code << "for( int _c_i_" << c << "=0; _c_i_" << c << "<" << vezes << "; _c_i_" << c << "++)" << endl;
     }
 
-    //if nested virou if um depois do outro
-    _code << "{ //" << block->blockLine << endl;
+    _code << "{ //" << block->blockLine << " (size: " << block->blockContent.size() << ")" << endl;
     for(BlockCmd &b : block->blockContent) {
         this->addCmd(b.line, b.cmd, b.params);
     }
     _code << "} //" << block->blockLine << endl;
 
+    cout << "==================" << endl<< endl;
 }
 
 void CppGenerator::_processBlock(std::unique_ptr<Block> &block, std::unique_ptr<Block> &savedBlock)
