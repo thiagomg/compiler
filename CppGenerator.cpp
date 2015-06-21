@@ -5,12 +5,13 @@
  * Created on 6 de Maio de 2015, 23:38
  */
 
-#include "CppGenerator.h"
-
 #include <string>
 #include <fstream>
-#include "asm_exception.h"
 #include <algorithm>
+
+#include "CppGenerator.h"
+#include "asm_exception.h"
+#include "utils.h"
 
 //TODO: Remover
 #include <iostream>
@@ -18,7 +19,7 @@
 using namespace std;
 using namespace generator;
 
-
+int CppGenerator::_var_count = 0;
 
 CppGenerator::CppGenerator()
 {
@@ -49,7 +50,7 @@ CppGenerator::CppGenerator()
 }
 
 std::string getVarName(const std::string &varName) {
-    if( varName[0] == '\"' || varName[0] == '\'' ) {
+    if( varName[0] == '\"' || varName[0] == '\'' || Utils::is_number(varName) ) {
         return varName;
     }
     return "_iv_" + varName;
@@ -198,7 +199,7 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
             //Ele precisa ter 3 parametros
             //Ex: se resposta for "papai"
             if (params.size() != 3 || params[1] != "for")
-                throw asm_exception(line, R"(resposta precisa ter 3 parametros. Ex: se resposta for "papai")");
+                throw asm_exception(line, R"(se precisa ter 3 parametros. Ex: se resposta for "papai")");
 
             std::string varPerg = getVarName(params[0]);
             std::string varResp = getVarName(params[2]);
@@ -231,6 +232,26 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
             _curBlock->cmd = cmd;
             _curBlock->waitingStart = true;
 
+        } else if (cmd == "repita") {
+
+            //Ele precisa ter 3 parametros
+            //Ex: se resposta for "papai"
+            if (params.size() != 2 || params[1] != "vezes")
+                throw asm_exception(line, R"(repita precisa ter 2 parametros. Ex: repita 3 vezes)");
+
+            std::string varVezes = getVarName(params[0]);
+
+            if( !Utils::is_number(varVezes) ) {
+                throw asm_exception(line, R"(parametro de repita precisa ser um numero)" + varVezes);
+            }
+
+            //_curBlock.reset(new Block());
+            _curBlock = make_unique<Block>();
+            _curBlock->blockLine = line;
+            _curBlock->cmd = cmd;
+            _curBlock->blockParams.push_back(varVezes);
+            _curBlock->waitingStart = true;
+
         } else {
 
             _code << "// " << cmd << ": ";
@@ -254,6 +275,7 @@ void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string 
 
 void CppGenerator::_processSingleBlock(std::unique_ptr<Block> &block)
 {
+
     //TODO: Acertar comparacao para case insens. ou numeros
     if( block->cmd == "se" ) {
         const string &varPerg = block->blockParams[0];
@@ -261,6 +283,10 @@ void CppGenerator::_processSingleBlock(std::unique_ptr<Block> &block)
         _code << "if( icompare(" << varPerg << ", " << varResp << ") )" << endl;
     } else if( block->cmd == "senao" ) {
         _code << "else" << endl;
+    } else if( block->cmd == "repita" ) {
+        const string &vezes = block->blockParams[0];
+        int c = _getNextVar();
+        _code << "for( int _c_i_" << c << "=0; _c_i_" << c << "<" << vezes << "; _c_i_" << c << "++)" << endl;
     }
 
     //if nested virou if um depois do outro

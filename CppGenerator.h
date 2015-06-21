@@ -52,6 +52,7 @@ namespace generator {
         std::unordered_set<string> _varNames;
         std::unique_ptr<Block> _curBlock;
         std::unique_ptr<Block> _savedBlock;
+        static int _var_count;
 
     protected:
 
@@ -61,6 +62,7 @@ namespace generator {
         void _processSingleBlock(std::unique_ptr<Block> &block);
         void _processBlock(std::unique_ptr<Block> &block, std::unique_ptr<Block> &savedBlock);
         void _addBlockCmd(int line, const string &cmd, std::vector<string> &params);
+        int _getNextVar() { return ++_var_count; }
 
     public:
         CppGenerator();

@@ -42,6 +42,7 @@ private:
         {"pergunta", 3},
         {"se", 3},
         {"senao", 0},
+        {"repita", 2},
         {"[", 0},
         {"]", 0}
     };

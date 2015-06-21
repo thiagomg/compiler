@@ -81,7 +81,7 @@ void parse_file(ifstream &is, function<bool(int line_num, const vector<string> &
 }
 
 
-int main(int argc, char **argv)
+int main( /*int argc, char **argv */)
 {
     unique_ptr<CppGenerator> generator( new CppGenerator() );
     TokenProcessor proc(generator.get());

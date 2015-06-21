@@ -8,7 +8,8 @@ TARGET = compiler
 INCLUDEPATH += .
 
 # Input
-HEADERS += asm_exception.h CppGenerator.h QuotedWord.h TokenProcessor.h
+HEADERS += asm_exception.h CppGenerator.h QuotedWord.h TokenProcessor.h \
+    utils.h
 SOURCES += CppGenerator.cpp main.cpp TokenProcessor.cpp
 
 install_it.path = %{buildDir}

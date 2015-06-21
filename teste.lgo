@@ -21,7 +21,11 @@ se resposta for "papai"
 
 ]
 
-pergunta 'qual o seu nome: ' em resposta2
+#pergunta 'qual o seu nome: ' em resposta2
+
+repita 3 vezes [
+    escreva "uma vez"
+]
 
 #escreva "agora sim!" #comentario
 #outro
