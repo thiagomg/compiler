@@ -56,16 +56,6 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 	//2. pode-se juntar mais parametros com +
 	//3. Se tiver mais parametros, devolve mais de um comando.
 
-    if( line_chunks.size() == 0 ) {
-        if( line_num == -1 ) {
-            //end of file. hint.
-            vector<string> params;
-            _processCmd(-1, "", params);
-            cout << "Hint: " << line_num << endl;
-        }
-        return true;
-    }
-
     size_t iterCount = 0;
 	auto it = line_chunks.begin();
 	while( iterCount < line_chunks.size() ) {
@@ -89,7 +79,7 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 		}
 		
 		//Trocar o cout pela entrada no analisador sintatico
-		cout << line_num << ": " << cmd;
+		cout << line_num << ":	 " << cmd;
 		for(auto p : params) {
 			cout << " [" << p << "]";
 		}

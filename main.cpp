@@ -99,8 +99,7 @@ int main( /*int argc, char **argv */)
 				return proc.add(line_num, line_chunks);
             });
 
-            vector<string> v;
-            proc.add(-1, v);
+            generator->finish();
         } else
             cerr << "Erro abrindo arquivo: " << fname << endl;
 	
@@ -120,7 +119,7 @@ int main( /*int argc, char **argv */)
 
 	fstream fout;
 	fout.open("teste.cpp", fstream::out );
-	fout << generator->finish();
+	fout << generator->getCode();
 	fout.close();
 
     return 0;

@@ -3,6 +3,7 @@
 ######################################################################
 
 CONFIG += c++14
+CONFIG -= qt
 TEMPLATE = app
 TARGET = compiler
 INCLUDEPATH += .

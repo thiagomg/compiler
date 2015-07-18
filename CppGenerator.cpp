@@ -19,8 +19,6 @@
 using namespace std;
 using namespace generator;
 
-int CppGenerator::_var_count = 0;
-
 CppGenerator::CppGenerator()
 {
     string _modelName = "main_ex.cpp";
@@ -57,7 +55,7 @@ bool CppGenerator::_isValue(const string &varName)
     return false;
 }
 
-std::string CppGenerator::getVarName(const std::string &varName)
+std::string CppGenerator::_getVarName(const std::string &varName)
 {
     if( _isValue(varName) ) {
         return varName;
@@ -97,253 +95,58 @@ bool CppGenerator::_addVar(const std::string &varName)
     return true;
 }
 
-void CppGenerator::_addBlockCmd(int line, const string &cmd, std::vector<string> &params)
-{
-    if( _curBlock && _curBlock->waitingStart ) {
-        if( cmd == "[" ) {
-            _curBlock->waitingStart = false;
-            _curBlock->blockStarted = true;
-        } else {
-            throw asm_exception(line, "Inicio de bloco nao encontrado - [");
-        }
-        return;
-    } else if( _curBlock && _curBlock->blockStarted ) {
-        if( cmd == "[" ) {
-            //subblock
-            _curBlock->addSubBlock();
-        }
-        if( cmd == "]" ) {
-            if( !_curBlock->remSubBlock() ) {
-                //este fechamento eh de um sub-bloco aberto
-                _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
-                return;
-            }
-            if( _curBlock->blockContent.empty() ) {
-                throw asm_exception(line, "comando se com bloco vazio encontrado");
-            }
-
-            //se nao tem _savedBlock, nao eh um else
-            if( _savedBlock.get() == nullptr ) {
-
-                if( _curBlock->cmd == "se" ) {
-                    _curBlock.swap(_savedBlock); //vamos salvar. Pode ter um senao
-                } else {
-
-                    //Nao eh se. Vamos processar
-                    std::unique_ptr<Block> thisBlock;
-                    _curBlock.swap(thisBlock);
-                    _processSingleBlock(thisBlock);
-                }
-
-            } else {
-
-                //tem um _savedBlock
-                if( _curBlock->cmd == "senao" ) {
-                    //Se/senao
-                    std::unique_ptr<Block> thisBlock;
-                    std::unique_ptr<Block> savedBlock;
-                    _curBlock.swap(thisBlock);
-                    _savedBlock.swap(savedBlock);
-
-                    _processBlock(thisBlock, savedBlock);
-                } else {
-                    throw asm_exception("bloco desconhecido - " + _curBlock->cmd);
-                }
-
-            }
-
-            //Processo terminado.
-            //Agora vamos esperar o proximo para verificar se eh else
-        } else {
-            _curBlock->blockContent.push_back( BlockCmd(line, cmd, params) );
-        }
-        return;
-    }
-
-}
-
 void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string > &params)
 {
-    try {
-
-        if( _curBlock ) {
-            _addBlockCmd(line, cmd, params);
-            return;
-        }
-
-        if( _savedBlock && cmd != "senao" ) {
-            std::unique_ptr<Block> thisBlock;
-            _savedBlock.swap(thisBlock);
-            _processSingleBlock(thisBlock);
-        }
-
-        if (cmd == "escreva") {
-
-            //Ex: escreva "ola tudo bem" nome
-            _code << "std::cout << ";
-            for_each(begin(params), end(params), [this, line](const string &s) {
-                std::string varName = getVarName(s);
-                _validateVar(line, varName);
-                _code << varName << " << ";
-            });
-            _code << "std::endl;" << endl;
-
-        } else if (cmd == "pergunta") {
-
-            //Ele precisa ter 3 parametros
-            //Ex: pergunta 'qual o seu nome' em resposta
-            if (params.size() != 3 || params[1] != "em")
-                throw asm_exception(line, R"(pergunta precisa ter 3 parametros. Ex: pergunta 'qual o seu nome' em resposta)");
-
-            _validateVar(line, params[0]); //pode ser uma string ou uma variavel
-
-            std::string varName = getVarName(params[2]);
-            _addVar(varName);
-
-            _code << "std::string " << varName << ";" << endl;
-            _code << "std::cout << " << params[0] << ";" << endl;
-            _code << "std::cin >> " << varName << ";" << endl;
-
-        } else if (cmd == "se") {
-
-            //Ele precisa ter 3 parametros
-            //Ex: se resposta for "papai"
-            if (params.size() != 3 || params[1] != "for")
-                throw asm_exception(line, R"(se precisa ter 3 parametros. Ex: se resposta for "papai")");
-
-            std::string varPerg = getVarName(params[0]);
-            std::string varResp = getVarName(params[2]);
-
-            _validateVar(line, varPerg); //pode ser uma string ou uma variavel
-            _validateVar(line, varResp); //pode ser uma string ou uma variavel
-
-            //_curBlock.reset(new Block());
-            _curBlock = make_unique<Block>();
-            _curBlock->blockLine = line;
-            _curBlock->cmd = cmd;
-            _curBlock->blockParams.push_back(varPerg);
-            _curBlock->blockParams.push_back(varResp);
-            _curBlock->waitingStart = true;
-
-        } else if (cmd == "senao") {
-
-            //Ele precisa ter 3 parametros
-            //Ex: se resposta for "papai"
-            if (params.size() != 0 )
-                throw asm_exception(line, R"(senao nao tem parametros!)");
-
-            if( _savedBlock == nullptr || _savedBlock->cmd != "se") {
-                throw asm_exception(line, R"(senao so pode existir depois de um bloco se!)");
-            }
-
-            //_curBlock.reset(new Block());
-            _curBlock = make_unique<Block>();
-            _curBlock->blockLine = line;
-            _curBlock->cmd = cmd;
-            _curBlock->waitingStart = true;
-
-        } else if (cmd == "repita") {
-
-            //Ele precisa ter 3 parametros
-            //Ex: se resposta for "papai"
-            if (params.size() != 2 || params[1] != "vezes")
-                throw asm_exception(line, R"(repita precisa ter 2 parametros. Ex: repita 3 vezes)");
-
-            std::string varVezes = getVarName(params[0]);
-
-            if( !Utils::is_number(varVezes) ) {
-                throw asm_exception(line, R"(parametro de repita precisa ser um numero)" + varVezes);
-            }
-
-            //_curBlock.reset(new Block());
-            _curBlock = make_unique<Block>();
-            _curBlock->blockLine = line;
-            _curBlock->cmd = cmd;
-            _curBlock->blockParams.push_back(varVezes);
-            _curBlock->waitingStart = true;
-
-        } else {
-
-            _code << "// " << cmd << ": ";
-            for_each(begin(params), end(params), [this](const string &s) {
-                _code << "[" << s << "]";
-            });
-            _code << endl;
-
-        }
-    } catch( asm_exception &e ) {
-        stringstream ss;
-        ss << endl << cmd << ": ";
-        for_each(begin(params), end(params), [&ss](const string &s) {
-            ss << "[" << s << "]";
-        });
-        ss << endl;
-        throw asm_exception(e.line(), e.what() + ss.str() );
-    }
-    //_code << cmd;
+    _tokenList.push_back(CmdToken(line, cmd, params));
 }
 
-void CppGenerator::_processSingleBlock(std::unique_ptr<Block> &block)
+CmdToken CppGenerator::_getNext()
 {
-
-    //DEBUG:
-    cout << "BLK CMD: " << block->cmd << "(";
-    for(string &sb : block->blockParams) {
-        cout << " " << sb;
-    }
-    cout << ") {" << endl;
-    cout << "//(size: " << block->blockContent.size() << ")" << endl;
-
-    for(BlockCmd &b : block->blockContent) {
-        cout << "    " << b.cmd << "(";
-        for(string &sb : b.params) {
-            cout << " " << sb;
-        }
-        cout << ")" << endl;
-    }
-    cout << "}" << endl ;
-    cout << "-------------------" << endl;
-
-    //TODO: Acertar comparacao para case insens. ou numeros
-    if( block->cmd == "se" ) {
-        const string &varPerg = block->blockParams[0];
-        const string &varResp = block->blockParams[1];
-        _code << "if( icompare(" << varPerg << ", " << varResp << ") )" << endl;
-    } else if( block->cmd == "senao" ) {
-        _code << "else" << endl;
-    } else if( block->cmd == "repita" ) {
-        const string &vezes = block->blockParams[0];
-        int c = _getNextVar();
-        _code << "for( int _c_i_" << c << "=0; _c_i_" << c << "<" << vezes << "; _c_i_" << c << "++)" << endl;
-    }
-
-    _code << "{ //" << block->blockLine << " (size: " << block->blockContent.size() << ")" << endl;
-    for(BlockCmd &b : block->blockContent) {
-        this->addCmd(b.line, b.cmd, b.params);
-    }
-    _code << "} //" << block->blockLine << endl;
-
-    cout << "==================" << endl<< endl;
+    CmdToken cmd_ref = _tokenList.front();
+    _tokenList.pop_front();
+    return std::move(cmd_ref);
 }
 
-void CppGenerator::_processBlock(std::unique_ptr<Block> &block, std::unique_ptr<Block> &savedBlock)
+void CppGenerator::_putBack(CmdToken &&cmdToken)
 {
-    if( block.get() == nullptr )
-        return;
+    _tokenList.push_front(std::move(cmdToken));
+}
 
-    if( savedBlock.get() != nullptr ) {
-        _processSingleBlock(savedBlock);
+bool CppGenerator::_hasToken()
+{
+    return !_tokenList.empty();
+}
+
+void CppGenerator::_genEscreva(CmdToken &cmdToken)
+{
+    
+}
+
+void CppGenerator::finish() {
+
+    while( _hasToken() ) {
+
+        CmdToken cmdToken = _getNext();
+        
+        //Aqui, ao inves de construir um codigo cpp, melhor gerar uma Abstract Syntax Tree
+        //cmd p1 p2 ... pn
+        //Sendo P? -> Value or Cmd (que sempre deve retornar um valor)
+        
+        cout << getLine(cmdToken.line) << cmdToken.cmd << " ( ";
+        for(auto &param : cmdToken.params) {
+            cout << param << " ";
+        }
+        cout << ") " << endl;
     }
-
-    _processSingleBlock(block);
 
 }
 
-std::string CppGenerator::finish()
+std::string CppGenerator::getCode()
 {
-    std::string ret;
-    std::string code = _code.str();
-    ret.reserve( _before.size() + _after.size() + code.size() + 64 );
-    ret.append(_before).append(code).append(_after);
-    return ret;
+//    std::string ret;
+//    std::string code = _code.str();
+//    ret.reserve( _before.size() + _after.size() + code.size() + 64 );
+//    ret.append(_before).append(code).append(_after);
+//    return ret;
+    return "[[code]]";
 }
