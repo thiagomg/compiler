@@ -3,23 +3,5 @@ project(compiler)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
-set(SOURCE_FILES
-    CppGenerator.cpp
-    CppGenerator.h
-    main.cpp
-    QuotedWord.h
-    TokenProcessor.cpp
-    TokenProcessor.h
-    asm_exception.h)
-
+set(SOURCE_FILES main.cpp CppGenerator.cpp CppGenerator.h TokenProcessor.cpp TokenProcessor.h utils.h QuotedWord.h asm_exception.h)
 add_executable(compiler ${SOURCE_FILES})
-
-add_custom_command(TARGET compiler POST_BUILD        # Adds a post-build event to MyTest
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_SOURCE_DIR}/main_ex.cpp"      # <--this is in-file
-        $<TARGET_FILE_DIR:compiler>)                 # <--this is out-file path
-
-add_custom_command(TARGET compiler POST_BUILD        # Adds a post-build event to MyTest
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different  # which executes "cmake - E copy_if_different..."
-        "${PROJECT_SOURCE_DIR}/teste.lgo"      # <--this is in-file
-        $<TARGET_FILE_DIR:compiler>)                 # <--this is out-file path
