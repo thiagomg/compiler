@@ -47,52 +47,8 @@ CppGenerator::CppGenerator()
 
 }
 
-bool CppGenerator::_isValue(const string &varName)
-{
-    if( varName[0] == '\"' || varName[0] == '\'' || Utils::is_number(varName) ) {
-        return true;
-    }
-    return false;
-}
-
-std::string CppGenerator::_getVarName(const std::string &varName)
-{
-    if( _isValue(varName) ) {
-        return varName;
-    }
-    return "_iv_" + varName;
-}
-
 std::string getLine(const int line) {
     return "Line: " + to_string(line) + ": ";
-}
-
-void CppGenerator::_validateVar(int line, const std::string &varName)
-{
-    if( varName.empty() )
-        throw asm_exception(line, "nome de variavel nao pode ser vazio");
-
-    if( _isValue(varName) ) {
-        return;
-    }
-    if( _varNames.find(varName) == _varNames.end() ) {
-        throw asm_exception(line, "Variavel nao encontrada - " + varName);
-    }
-    return;
-}
-
-bool CppGenerator::_addVar(const std::string &varName)
-{
-    if( varName.empty() ) return false;
-    if( _isValue(varName) ) {
-        return true;
-    }
-
-    if( _varNames.find(varName) == _varNames.end() ) {
-        _varNames.insert(varName);
-    }
-
-    return true;
 }
 
 void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string > &params)

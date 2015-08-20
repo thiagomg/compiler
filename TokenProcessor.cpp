@@ -12,12 +12,10 @@
 
 using namespace std;
 
-TokenProcessor::TokenProcessor(generator::CppGenerator *generator) {
-    _generator = generator;
-}
 
-//TokenProcessor::TokenProcessor(const TokenProcessor& orig) {
-//}
+TokenProcessor::TokenProcessor() {
+
+}
 
 TokenProcessor::~TokenProcessor() {
 }
@@ -28,7 +26,7 @@ void TokenProcessor::_processCmd(int line_num, const string &cmd, std::vector< s
 //        cout << " " << i ;
 //    cout << endl;
 
-    _generator->addCmd(line_num, cmd,params);
+    _tokens.push_back(CmdToken(line_num, cmd, params));
 
 }
 

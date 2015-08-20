@@ -13,13 +13,26 @@
 #include <map>
 #include <memory>
 
-namespace generator {
-    class CppGenerator;
-}
+
+struct CmdToken {
+    CmdToken(int line, const std::string &cmd, std::vector< std::string > &params) {
+        this->line = line;
+        this->cmd = cmd;
+        this->params = params;
+    }
+    CmdToken(const CmdToken &src) {
+        this->line = src.line;
+        this->cmd = src.cmd;
+        this->params = src.params;
+    }
+    int line;
+    std::string cmd;
+    std::vector<std::string> params;
+};
 
 class TokenProcessor {
 public:
-    TokenProcessor(generator::CppGenerator *generator);
+    TokenProcessor();
     TokenProcessor(const TokenProcessor& orig) = delete;
     virtual ~TokenProcessor();
     
@@ -31,7 +44,7 @@ protected:
 
 private:
 
-    generator::CppGenerator *_generator;
+    std::vector<CmdToken> _tokens;
 
     std::string _cmd;
     std::vector< std::string > _params;

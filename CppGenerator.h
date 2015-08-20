@@ -47,9 +47,6 @@ namespace generator {
 
         std::list<CmdToken> _tokenList;
 
-        //variable name list
-        std::set<std::string> _varNames;
-
         //Used to hold cpp template
         std::string _before;
         std::string _after;
@@ -57,11 +54,6 @@ namespace generator {
 
     protected:
 
-        bool _isValue(const string &varName);
-        void _validateVar(int line, const string &varName);
-        bool _addVar(const string &varName);
-        std::string _getVarName(const std::string &varName);
-        
         CmdToken _getNext();
         void _putBack(CmdToken &&cmdToken);
         bool _hasToken();
