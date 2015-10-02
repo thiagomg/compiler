@@ -6,9 +6,98 @@
 #include "VarUtils.h"
 #include "utils.h"
 #include "asm_exception.h"
+#include "TokenProcessor.h"
+
+#include <iostream>
+
+using namespace generator;
+using namespace std;
 
 VarUtils varUtils;
 
+AstGenerator::AstGenerator(TokenProcessor &processor) : _processor(processor) {
+
+}
+
+void AstGenerator::generate()
+{
+    //0, "rotina", vector<string>{"principal"}
+
+//    auto tokens = _processor.tokenList();
+//
+//    for(auto it = tokens.begin(); it != tokens.end(); it++) {
+//
+//        CmdToken &token = *it;
+//        if(Utils::is_equal(token.cmd, "se")) {
+//            CompExpr
+//        }
+//
+//    }
+
+//    if( _mainExpr.get() == nullptr ) {
+//        auto expr = new FuncExpr();
+//        expr->name = "main";
+//    }
+//
+//    TokenProcessor::Range tokenRange = _processor.getRange();
+//    TokenProcessor::Iterator it = tokenRange.first;
+//    while()
+//        Expr::ExprPtr expr = parseCmd();
+//        //Colocar na arvore.
+//    }
+
+
+}
+
+void AstGenerator::generate(TokenProcessor::Range range)
+{
+    TokenProcessor::Iterator it = range.begin();
+    while(it != range.end()) {
+        Expr::ExprPtr expr = parseCmd(range, it);
+        //Colocar na arvore.
+    }
+}
+
+Expr::ExprPtr AstGenerator::parseCmd(TokenProcessor::Range &range, TokenProcessor::Iterator &it)
+{
+    CmdToken &token = *it;
+
+//    if(Utils::is_equal("se", token.cmd)) {
+//        CompExpr *expr = new CompExpr();
+//
+//    }
+
+    return Expr::ExprPtr();
+
+}
+
+//void addCmd(int line, const std::string &cmd, const std::vector<std::string> &params)
+//{
+//    if( Utils::is_equal(cmd, "rotina") ) {
+//        FuncExpr *f = new FuncExpr();
+//        f->parse(line, cmd, params);
+//
+//        Expr::ExprPtr expr( f );
+//        if( mainExpr == nullptr ) {
+//            mainExpr = expr;
+//        }
+//        return;
+//    }
+//
+//    if( Utils::is_equal(cmd, "if") ) {
+//        return;
+//    }
+//}
+
+void AstGenerator::finish()
+{
+
+}
+
+std::string AstGenerator::getCode()
+{
+    return "";
+}
 
 struct FuncExpr : public Expr {
 

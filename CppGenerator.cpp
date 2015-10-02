@@ -53,19 +53,19 @@ std::string getLine(const int line) {
 
 void CppGenerator::addCmd(int line, const string &cmd, std::vector< std::string > &params)
 {
-    _tokenList.push_back(CmdToken(line, cmd, params));
+    _tokenList.push_back(CppCmdToken(line, cmd, params));
 }
 
-CmdToken CppGenerator::_getNext()
+CppCmdToken CppGenerator::_getNext()
 {
-    CmdToken cmd_ref = _tokenList.front();
+    CppCmdToken cmd_ref = _tokenList.front();
     _tokenList.pop_front();
     return std::move(cmd_ref);
 }
 
-void CppGenerator::_putBack(CmdToken &&cmdToken)
+void CppGenerator::_putBack(CppCmdToken &&CppCmdToken)
 {
-    _tokenList.push_front(std::move(cmdToken));
+    _tokenList.push_front(std::move(CppCmdToken));
 }
 
 bool CppGenerator::_hasToken()
@@ -73,7 +73,7 @@ bool CppGenerator::_hasToken()
     return !_tokenList.empty();
 }
 
-void CppGenerator::_genEscreva(CmdToken &cmdToken)
+void CppGenerator::_genEscreva(CppCmdToken &CppCmdToken)
 {
     
 }
@@ -82,14 +82,14 @@ void CppGenerator::finish() {
 
     while( _hasToken() ) {
 
-        CmdToken cmdToken = _getNext();
+        CppCmdToken CppCmdToken = _getNext();
         
         //Aqui, ao inves de construir um codigo cpp, melhor gerar uma Abstract Syntax Tree
         //cmd p1 p2 ... pn
         //Sendo P? -> Value or Cmd (que sempre deve retornar um valor)
         
-        cout << getLine(cmdToken.line) << cmdToken.cmd << " ( ";
-        for(auto &param : cmdToken.params) {
+        cout << getLine(CppCmdToken.line) << CppCmdToken.cmd << " ( ";
+        for(auto &param : CppCmdToken.params) {
             cout << param << " ";
         }
         cout << ") " << endl;

@@ -1,14 +1,15 @@
-#include <stdio.h>
+//#include <stdio.h>
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <functional>
 #include <memory>
+#include <sstream>
 
 #include "QuotedWord.h"
 #include "TokenProcessor.h"
-#include "CppGenerator.h"
+#include "AstGenerator.h"
 
 using namespace std;
 using namespace generator;
@@ -83,15 +84,18 @@ void parse_file(ifstream &is, function<bool(int line_num, const vector<string> &
 
 int main( /*int argc, char **argv */)
 {
-    unique_ptr<CppGenerator> generator( new CppGenerator() );
+    //unique_ptr<CppGenerator> generator( new CppGenerator() );
     TokenProcessor proc; //(generator.get());
-    
+    unique_ptr<AstGenerator> generator( new AstGenerator(proc) );
+
     string fname = "teste.lgo";
 
     ifstream is(fname.c_str());
     try {
 
         if( is.good() ) {
+
+
 			//parse_file quebra em linhas e manda um vector 
 			//para o processador de tokens
             parse_file(is, [&proc](int line_num, const vector<string> &line_chunks) {
@@ -99,6 +103,7 @@ int main( /*int argc, char **argv */)
 				return proc.add(line_num, line_chunks);
             });
 
+            generator->generate();
             generator->finish();
         } else
             cerr << "Erro abrindo arquivo: " << fname << endl;

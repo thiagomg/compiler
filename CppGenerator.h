@@ -19,18 +19,18 @@
 
 namespace generator {
 
-    struct CmdToken {
-        CmdToken(int line, const std::string &cmd, std::vector< std::string > &params) {
+    struct CppCmdToken {
+        CppCmdToken(int line, const std::string &cmd, std::vector< std::string > &params) {
             this->line = line;
             this->cmd = cmd;
             this->params = params;
         }
-//        CmdToken(CmdToken &&src) {
+//        CppCmdToken(CppCmdToken &&src) {
 //            this->line = src.line;
 //            this->cmd = src.cmd;
 //            this->params = src.params;
 //        }
-        CmdToken(const CmdToken &src) {
+        CppCmdToken(const CppCmdToken &src) {
             this->line = src.line;
             this->cmd = src.cmd;
             this->params = src.params;
@@ -45,7 +45,7 @@ namespace generator {
         using string = std::string;
         using ParamVector = std::vector<string>;
 
-        std::list<CmdToken> _tokenList;
+        std::list<CppCmdToken> _tokenList;
 
         //Used to hold cpp template
         std::string _before;
@@ -54,12 +54,12 @@ namespace generator {
 
     protected:
 
-        CmdToken _getNext();
-        void _putBack(CmdToken &&cmdToken);
+        CppCmdToken _getNext();
+        void _putBack(CppCmdToken &&CppCmdToken);
         bool _hasToken();
         
         //Generators
-        void _genEscreva(CmdToken &cmdToken);
+        void _genEscreva(CppCmdToken &CppCmdToken);
 
     public:
         CppGenerator();

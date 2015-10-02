@@ -8,7 +8,6 @@
 #include "TokenProcessor.h"
 
 #include <iostream>
-#include "CppGenerator.h"
 
 using namespace std;
 
@@ -47,6 +46,17 @@ int TokenProcessor::_getSize(const std::string &cmd) {
 	return it->second;
 }
 
+std::vector<CmdToken> &TokenProcessor::tokenList()
+{
+    return _tokens;
+}
+
+TokenProcessor::Range TokenProcessor::getRange()
+{
+    return TokenProcessor::Range(_tokens.begin(), _tokens.end());
+}
+
+
 bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 
 	//Regras:
@@ -78,9 +88,11 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 		
 		//Trocar o cout pela entrada no analisador sintatico
 		cout << line_num << ":	 " << cmd;
+        if( !params.empty() ) cout << " (";
 		for(auto p : params) {
-			cout << " [" << p << "]";
+			cout << " " << p;
 		}
+        if( !params.empty() ) cout << " )";
 		cout << endl;
 
 		_processCmd(line_num, cmd, params);

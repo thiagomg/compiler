@@ -13,6 +13,23 @@
 #include <map>
 #include <memory>
 
+namespace stt {
+    template<typename T>
+    struct Range {
+
+        Range(typename T::iterator b, typename T::iterator e) : _begin(b), _end(e) { }
+        Range(T &container) : _begin(container.begin()), _end(container.end()) { }
+
+        typename T::iterator begin() { return _begin; }
+        const typename T::iterator begin() const { return _begin; }
+
+        typename T::iterator end() { return _end; }
+        const typename T::iterator end() const { return _end; }
+
+    private:
+        typename T::iterator _begin, _end;
+    };
+}
 
 struct CmdToken {
     CmdToken(int line, const std::string &cmd, std::vector< std::string > &params) {
@@ -35,8 +52,17 @@ public:
     TokenProcessor();
     TokenProcessor(const TokenProcessor& orig) = delete;
     virtual ~TokenProcessor();
-    
+
+    using Iterator = std::vector<CmdToken>::iterator;
+    using TokenVector = std::vector<CmdToken>;
+    using Range = stt::Range<TokenVector>;
+
     bool add(int line_num, const std::vector<std::string> &line_chunks);
+
+
+    Range getRange();
+    TokenVector &tokenList();
+
 
 protected:
     void _processCmd(int line_num, const std::string &cmd, std::vector< std::string > &params);
@@ -56,6 +82,7 @@ private:
         {"se", 3},
         {"senao", 0},
         {"repita", 2},
+        {"defina", 3},
         {"[", 0},
         {"]", 0}
     };
