@@ -20,17 +20,34 @@ namespace generator {
 
         using ExprPtr = std::shared_ptr<Expr>;
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) = 0;
-        virtual ~Expr() = 0;
     };
+
+    struct FuncExpr : public Expr {
+
+        std::vector<std::string> params;
+        std::vector<ExprPtr> body;
+
+        virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
+            this->name = name;
+            this->params = params;
+        }
+
+        void addBody(ExprPtr expr) {
+            body.push_back(expr);
+        }
+
+        virtual ~FuncExpr() {}
+    };
+    using FuncExprPtr = std::shared_ptr<FuncExpr>;
 
     class AstGenerator {
     public:
 
         AstGenerator(TokenProcessor &processor);
         void generate();
-        void generate(TokenProcessor::Range range);
+        void generate(FuncExprPtr parent, TokenProcessor::Range range);
 
-        Expr::ExprPtr parseCmd(TokenProcessor::Range &range, TokenProcessor::Iterator &it);
+        TokenProcessor::Iterator parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it);
 
         //void addCmd(int line, const std::string &cmd, const std::vector<std::string> &params);
 
@@ -38,7 +55,7 @@ namespace generator {
 
         std::string getCode();
 
-        Expr::ExprPtr _mainExpr;
+        FuncExprPtr _mainExpr;
         TokenProcessor &_processor;
 
     };

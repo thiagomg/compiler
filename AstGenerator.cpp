@@ -14,108 +14,20 @@ using namespace generator;
 using namespace std;
 
 VarUtils varUtils;
-
-AstGenerator::AstGenerator(TokenProcessor &processor) : _processor(processor) {
-
-}
-
-void AstGenerator::generate()
-{
-    //0, "rotina", vector<string>{"principal"}
-
-//    auto tokens = _processor.tokenList();
-//
-//    for(auto it = tokens.begin(); it != tokens.end(); it++) {
-//
-//        CmdToken &token = *it;
-//        if(Utils::is_equal(token.cmd, "se")) {
-//            CompExpr
-//        }
-//
-//    }
-
-//    if( _mainExpr.get() == nullptr ) {
-//        auto expr = new FuncExpr();
-//        expr->name = "main";
-//    }
-//
-//    TokenProcessor::Range tokenRange = _processor.getRange();
-//    TokenProcessor::Iterator it = tokenRange.first;
-//    while()
-//        Expr::ExprPtr expr = parseCmd();
-//        //Colocar na arvore.
-//    }
+using ParamVector = std::vector<std::string>;
 
 
-}
-
-void AstGenerator::generate(TokenProcessor::Range range)
-{
-    TokenProcessor::Iterator it = range.begin();
-    while(it != range.end()) {
-        Expr::ExprPtr expr = parseCmd(range, it);
-        //Colocar na arvore.
-    }
-}
-
-Expr::ExprPtr AstGenerator::parseCmd(TokenProcessor::Range &range, TokenProcessor::Iterator &it)
-{
-    CmdToken &token = *it;
-
-//    if(Utils::is_equal("se", token.cmd)) {
-//        CompExpr *expr = new CompExpr();
-//
-//    }
-
-    return Expr::ExprPtr();
-
-}
-
-//void addCmd(int line, const std::string &cmd, const std::vector<std::string> &params)
-//{
-//    if( Utils::is_equal(cmd, "rotina") ) {
-//        FuncExpr *f = new FuncExpr();
-//        f->parse(line, cmd, params);
-//
-//        Expr::ExprPtr expr( f );
-//        if( mainExpr == nullptr ) {
-//            mainExpr = expr;
-//        }
-//        return;
-//    }
-//
-//    if( Utils::is_equal(cmd, "if") ) {
-//        return;
-//    }
-//}
-
-void AstGenerator::finish()
-{
-
-}
-
-std::string AstGenerator::getCode()
-{
-    return "";
-}
-
-struct FuncExpr : public Expr {
-
+//---------------------------------------------
+struct CallExpr : public Expr {
+    std::string name;
     std::vector<std::string> params;
-    std::vector<ExprPtr> body;
-
-    virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
+    virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) {
+        //This is easy.
         this->name = name;
         this->params = params;
     }
 
-    void addBody(ExprPtr expr) {
-        body.push_back(expr);
-    }
-
-    virtual ~FuncExpr() {}
 };
-
 struct VarExpr : public Expr {
 
     std::string value;
@@ -135,7 +47,6 @@ struct VarExpr : public Expr {
     }
     virtual ~VarExpr() {}
 };
-
 struct CompExpr : public Expr {
 
     std::vector<ExprPtr> true_body;
@@ -160,3 +71,68 @@ struct CompExpr : public Expr {
     }
     virtual ~CompExpr() {};
 };
+//=============================================
+
+AstGenerator::AstGenerator(TokenProcessor &processor) : _processor(processor) {
+
+}
+
+void AstGenerator::generate()
+{
+
+    /*
+     * Main routine. Creates the ast root and start parsing
+     */
+
+    //0, "rotina", vector<string>{"principal"}
+
+    TokenProcessor::Range range = _processor.getRange();
+
+    _mainExpr = std::make_shared<FuncExpr>();
+    _mainExpr->parse(0, "principal", ParamVector());
+
+    generate(_mainExpr, range);
+
+}
+
+void AstGenerator::generate(FuncExprPtr parent, TokenProcessor::Range range)
+{
+    TokenProcessor::Iterator it = range.begin();
+    while(it != range.end()) {
+        it = parseCmd(parent, range, it);
+        it++;
+    }
+}
+
+TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it)
+{
+    using namespace Utils;
+
+    for(; it != range.end(); it++) {
+
+        CmdToken &token = *it;
+        if(is_equal("escreva", token.cmd)) {
+            if( token.params.empty() ) {
+                throw asm_exception(token.line, "Escreva precisa de ao menos um parametro");
+            }
+            auto call = std::make_shared<CallExpr>();
+            call->parse(token.line, token.cmd, token.params);
+            parent->addBody(call);
+            break;
+        }
+
+    }
+
+    return it;
+
+}
+
+void AstGenerator::finish()
+{
+
+}
+
+std::string AstGenerator::getCode()
+{
+    return "";
+}

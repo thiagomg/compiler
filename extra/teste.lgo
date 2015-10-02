@@ -1,13 +1,16 @@
 
-pergunta 'qual o seu nome' em resposta
+escreva 'Ola, tudo bem ?'
 
-defina 1 em valor
 
-se valor for 1
-[
-	defina 2 em valor
-	escreva 'Ola, tudo bem ?'
-] senao [
-	defina 3 em valor
-]
+#pergunta 'qual o seu nome' em resposta
+
+#defina 1 em valor
+
+#se valor for 1
+#[
+#	defina 2 em valor
+#	escreva 'Ola, tudo bem ?'
+#] senao [
+#	defina 3 em valor
+#]
 #    se "1" for "1"

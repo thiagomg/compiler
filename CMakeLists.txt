@@ -3,7 +3,7 @@ project(compiler)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
 
-set(SOURCE_FILES main.cpp CppGenerator.cpp CppGenerator.h TokenProcessor.cpp TokenProcessor.h utils.h QuotedWord.h asm_exception.h)
+set(SOURCE_FILES main.cpp CppGenerator.cpp CppGenerator.h TokenProcessor.cpp TokenProcessor.h utils.h QuotedWord.h asm_exception.h Runner.cpp Runner.h)
 add_executable(compiler ${SOURCE_FILES} AstGenerator.cpp AstGenerator.h VarUtils.cpp VarUtils.h utils.cpp)
 
 

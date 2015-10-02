@@ -10,6 +10,7 @@
 #include "QuotedWord.h"
 #include "TokenProcessor.h"
 #include "AstGenerator.h"
+#include "Runner.h"
 
 using namespace std;
 using namespace generator;
@@ -123,10 +124,14 @@ int main( /*int argc, char **argv */)
 
     //cout << generator->finish() << endl;
 
-	fstream fout;
-	fout.open("teste.cpp", fstream::out );
-	fout << generator->getCode();
-	fout.close();
+//	fstream fout;
+//	fout.open("teste.cpp", fstream::out );
+//	fout << generator->getCode();
+//	fout.close();
+
+    Runner runner;
+    runner.run(generator->_mainExpr);
+
 
     return 0;
 }
