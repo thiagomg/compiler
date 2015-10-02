@@ -2,6 +2,7 @@
 .kdev4/
 build/
 *.pro.user
+CMakeFiles/
 
 # Compiled Object files
 *.slo
