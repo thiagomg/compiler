@@ -27,6 +27,8 @@ namespace Utils {
         return true;
     }
     bool is_equal(const std::string &l, const std::string &r);
+    
+    std::string get_value(const std::string &s);
 }
 
 #endif // UTILS

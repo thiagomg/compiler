@@ -74,7 +74,7 @@ private:
 
     std::string _cmd;
     std::vector< std::string > _params;
-    int _missing = 0;
+    //int _missing = 0;
     
     std::map<std::string, int> _cmdSize {
         {"escreva", 1},

@@ -18,16 +18,6 @@ using ParamVector = std::vector<std::string>;
 
 
 //---------------------------------------------
-struct CallExpr : public Expr {
-    std::string name;
-    std::vector<std::string> params;
-    virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) {
-        //This is easy.
-        this->name = name;
-        this->params = params;
-    }
-
-};
 struct VarExpr : public Expr {
 
     std::string value;
@@ -42,7 +32,8 @@ struct VarExpr : public Expr {
             throw asm_exception(line, "numero de parametros incorretos em defina: ", params);
 
         this->value = params[0];
-        this->name = params[2];
+        //this->name = params[2];
+        setName(params[2]);
 
     }
     virtual ~VarExpr() {}
@@ -88,7 +79,8 @@ void AstGenerator::generate()
 
     TokenProcessor::Range range = _processor.getRange();
 
-    _mainExpr = std::make_shared<FuncExpr>();
+    //_mainExpr = std::make_shared<FuncExpr>();
+    _mainExpr.reset(new FuncExpr());
     _mainExpr->parse(0, "principal", ParamVector());
 
     generate(_mainExpr, range);
@@ -100,8 +92,13 @@ void AstGenerator::generate(FuncExprPtr parent, TokenProcessor::Range range)
     TokenProcessor::Iterator it = range.begin();
     while(it != range.end()) {
         it = parseCmd(parent, range, it);
+        //DEBUG
+        if( it != range.end() ) {
+            cout << "Parsed: " << it->cmd << endl;
+        }
         it++;
     }
+
 }
 
 TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it)
@@ -115,11 +112,29 @@ TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcess
             if( token.params.empty() ) {
                 throw asm_exception(token.line, "Escreva precisa de ao menos um parametro");
             }
-            auto call = std::make_shared<CallExpr>();
+            //auto call = std::make_shared<CallExpr>();
+            std::shared_ptr<CallExpr> call( new CallExpr() );
             call->parse(token.line, token.cmd, token.params);
             parent->addBody(call);
+
             break;
+        } else if( is_equal("pergunta", token.cmd) ) {
+            if( token.params.size() != 3 ) {
+                throw asm_exception(token.line, "Pergunta deve ter 3 parametros!");
+            }
+            //auto call = std::make_shared<CallExpr>();
+            std::shared_ptr<CallExpr> call( new CallExpr() );
+            //Pergunta xxx em var_name
+            call->parse(token.line, token.cmd, { token.params[0], token.params[2] });
+            parent->addBody(call);
+            break;
+        } else {
+            if( token.params.empty() ) {
+                throw asm_exception(token.line, "Funcao invalida: " + token.cmd);
+            }
         }
+        
+        
 
     }
 

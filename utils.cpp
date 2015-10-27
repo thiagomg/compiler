@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <algorithm>
 #include <string>
+#include <iostream>
 
 namespace Utils {
 
@@ -23,6 +24,14 @@ namespace Utils {
 
     bool is_equal(const std::string &l, const std::string &r) {
         return is_equal<std::string>(l, r);
+    }
+    
+    std::string get_value(const std::string &s) {
+        
+        //TODO: Gerar um range para nao fazer copia de string
+        if( s.size() < 2 ) return s;
+        return s.substr(1, s.size() - 2);
+        
     }
 
 }

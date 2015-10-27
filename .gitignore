@@ -38,3 +38,8 @@ CMakeFiles/
 cmake_install.cmake
 
 CMakeLists.txt.user
+
+CMakeScripts/
+compiler.build/
+compiler.xcodeproj/
+Debug/

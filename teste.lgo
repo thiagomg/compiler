@@ -1,8 +1,10 @@
 
 escreva 'Ola, tudo bem ?'
 
+#escreva 'Como vai você ?'
 
-#pergunta 'qual o seu nome' em resposta
+pergunta 'Digite o seu nome: ' em resposta
+escreva 'Como vai você ' + resposta + "?"
 
 #defina 1 em valor
 

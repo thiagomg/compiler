@@ -11,15 +11,17 @@
 #include "TokenProcessor.h"
 
 class TokenProcessor;
-class CmdToken;
+struct CmdToken;
 
 namespace generator {
 
     struct Expr {
-        std::string name;
-
         using ExprPtr = std::shared_ptr<Expr>;
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) = 0;
+        
+        virtual void setName(const std::string &name) = 0;
+        virtual const std::string &getName() = 0;
+        
     };
 
     struct FuncExpr : public Expr {
@@ -28,7 +30,8 @@ namespace generator {
         std::vector<ExprPtr> body;
 
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
-            this->name = name;
+            //this->name = name;
+            setName(name);
             this->params = params;
         }
 
@@ -36,10 +39,34 @@ namespace generator {
             body.push_back(expr);
         }
 
+        virtual void setName(const std::string &name) override { this->name = name; }
+        virtual const std::string &getName() override { return name; }
+
         virtual ~FuncExpr() {}
+
+    private:
+        std::string name;
+        
+
     };
     using FuncExprPtr = std::shared_ptr<FuncExpr>;
 
+    struct CallExpr : public generator::Expr {
+        std::vector<std::string> params;
+        virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
+            //This is easy.
+            this->name = name;
+            this->params = params;
+        }
+        
+        virtual void setName(const std::string &name) override { this->name = name; }
+        virtual const std::string &getName() override { return name; }
+        
+    private:
+        std::string name;
+        
+    };
+    
     class AstGenerator {
     public:
 
