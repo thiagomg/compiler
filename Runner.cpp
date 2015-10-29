@@ -46,7 +46,20 @@ namespace builtin {
             vars[var_name] = val;
         });
     }
-    
+
+    void defina(VarsType &vars, VarExpr *expr) {
+        const string &name = expr->getName();
+        const string &value = expr->value;
+        
+        if( Utils::is_value(value) ) {
+            vars[name] = value;
+        } else {
+            //Setting one var to another
+            const std::string &v = vars[value];
+            vars[name] = v;
+        }
+    }
+
 }
 
 void Runner::run(generator::FuncExprPtr func)
@@ -61,7 +74,7 @@ void Runner::run(generator::FuncExprPtr func)
 
     //std::string root = "@";
 
-    //cout << root << " " << func->getName() << " " << func->body.size() << endl;
+    //TODO: change this to call ->exec and run without this fake reflection
     for( auto e : func->body ) {
         //std::string level = "@" + root;
 
@@ -78,6 +91,12 @@ void Runner::run(generator::FuncExprPtr func)
         else if( is_equal(e->getName(), "pergunta") ) {
             CallExpr *ce = dynamic_cast<CallExpr *>(e.get());
             builtin::pergunta(vars, ce);
+        } else {
+            
+            VarExpr *ve = dynamic_cast<VarExpr *>(e.get());
+            if( ve != nullptr ) {
+                builtin::defina(vars, ve);
+            }
         }
         
     }

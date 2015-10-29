@@ -3,10 +3,15 @@ escreva 'Ola, tudo bem ?'
 
 #escreva 'Como vai você ?'
 
-pergunta 'Digite o seu nome: ' em resposta
-escreva 'Como vai você ' + resposta + "?"
+#pergunta 'Digite o seu nome: ' em resposta
+#escreva 'Como vai você ' + resposta + "?"
 
-#defina 1 em valor
+defina 1 em valor
+defina valor+1 em v2
+escreva 'valor: ' + v2
+
+#defina valor em valor2
+#escreva 'valor2: ' + valor2
 
 #se valor for 1
 #[

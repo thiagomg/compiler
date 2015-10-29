@@ -9,6 +9,8 @@
 #include <vector>
 #include <memory>
 #include "TokenProcessor.h"
+#include "utils.h"
+#include "asm_exception.h"
 
 class TokenProcessor;
 struct CmdToken;
@@ -19,8 +21,11 @@ namespace generator {
         using ExprPtr = std::shared_ptr<Expr>;
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) = 0;
         
-        virtual void setName(const std::string &name) = 0;
-        virtual const std::string &getName() = 0;
+        virtual void setName(const std::string &name) { this->name = name; }
+        virtual const std::string &getName() { return name; }
+
+    private:
+        std::string name;
         
     };
 
@@ -39,14 +44,7 @@ namespace generator {
             body.push_back(expr);
         }
 
-        virtual void setName(const std::string &name) override { this->name = name; }
-        virtual const std::string &getName() override { return name; }
-
         virtual ~FuncExpr() {}
-
-    private:
-        std::string name;
-        
 
     };
     using FuncExprPtr = std::shared_ptr<FuncExpr>;
@@ -55,17 +53,12 @@ namespace generator {
         std::vector<std::string> params;
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
             //This is easy.
-            this->name = name;
+            setName(name);
             this->params = params;
         }
         
-        virtual void setName(const std::string &name) override { this->name = name; }
-        virtual const std::string &getName() override { return name; }
-        
-    private:
-        std::string name;
-        
     };
+    using FuncExprPtr = std::shared_ptr<FuncExpr>;
     
     class AstGenerator {
     public:
@@ -76,8 +69,6 @@ namespace generator {
 
         TokenProcessor::Iterator parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it);
 
-        //void addCmd(int line, const std::string &cmd, const std::vector<std::string> &params);
-
         void finish();
 
         std::string getCode();
@@ -87,6 +78,28 @@ namespace generator {
 
     };
 
+    struct VarExpr : public Expr {
+        
+        std::string value;
+        
+        //FIXME: Por hora soh sera aceito +-*/, mas depois deve virar uma arvore
+        
+        virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
+            if( !Utils::is_equal(name, "defina") ) {
+                throw asm_exception(line, "defina nao esta com o nome defina");
+            }
+            
+            //defina 2 em valor
+            if( params.size() != 3 )
+                throw asm_exception(line, "numero de parametros incorretos em defina: ", params);
+            
+            this->value = params[0];
+            //this->name = params[2];
+            setName(params[2]);
+            
+        }
+        virtual ~VarExpr() {}
+    };
 
 
 }

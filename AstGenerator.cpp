@@ -18,26 +18,7 @@ using ParamVector = std::vector<std::string>;
 
 
 //---------------------------------------------
-struct VarExpr : public Expr {
 
-    std::string value;
-
-    virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
-        if( !Utils::is_equal(name, "defina") ) {
-            throw asm_exception(line, "defina nao esta com o nome defina");
-        }
-
-        //defina 2 em valor
-        if( params.size() != 3 )
-            throw asm_exception(line, "numero de parametros incorretos em defina: ", params);
-
-        this->value = params[0];
-        //this->name = params[2];
-        setName(params[2]);
-
-    }
-    virtual ~VarExpr() {}
-};
 struct CompExpr : public Expr {
 
     std::vector<ExprPtr> true_body;
@@ -105,6 +86,7 @@ TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcess
 {
     using namespace Utils;
 
+    //TODO: Change and create a check method for each class
     for(; it != range.end(); it++) {
 
         CmdToken &token = *it;
@@ -128,13 +110,16 @@ TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcess
             call->parse(token.line, token.cmd, { token.params[0], token.params[2] });
             parent->addBody(call);
             break;
+        } else if( is_equal("defina", token.cmd) ) {
+            std::shared_ptr<VarExpr> var( new VarExpr() );
+            var->parse(token.line, token.cmd, token.params);
+            parent->addBody(var);
+            break;
         } else {
             if( token.params.empty() ) {
                 throw asm_exception(token.line, "Funcao invalida: " + token.cmd);
             }
         }
-        
-        
 
     }
 
