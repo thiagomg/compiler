@@ -59,7 +59,7 @@ void AstGenerator::generate(FuncExprPtr parent, TokenProcessor::Range range)
 }
 
 template<typename T>
-TokenProcessor::Iterator check_and_parse(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it, bool &found) {
+TokenProcessor::Iterator AstGenerator::check_and_parse(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it, bool &found) {
 
     CmdToken &token = *it;
     
@@ -76,12 +76,65 @@ TokenProcessor::Iterator check_and_parse(FuncExprPtr parent, TokenProcessor::Ran
     return range.end();
 }
 
+template<>
+TokenProcessor::Iterator AstGenerator::check_and_parse<CompExpr>(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &ito, bool &found) {
+    
+    CmdToken &token = *ito;
+    
+    CompExpr *expr = CompExpr::create_if(token.cmd);
+    if( expr != nullptr ) {
+        expr->parse(token.line, token.cmd, token.params);
+        generator::Expr::ExprPtr p(expr);
+        parent->addBody(p);
+        
+        ++ito;
+
+        //Vamos agora procurar o começo e final
+        TokenProcessor::Iterator itf = ito;
+        
+        //O primeiro precisa ser um [
+        if( ito->cmd != "[" )
+            throw asm_exception("Apos um comando se, eh obrigatorio haver [");
+        
+        int brackets = 1;
+        
+        //vamos agora procurar onde fecha o parentese
+        for(; itf != range.end(); ++itf) {
+            CmdToken &c = *itf;
+            if( c.cmd == "[" )
+                brackets++;
+            else if( c.cmd == "]" )
+                brackets--;
+            if( brackets == 0 )
+                break;
+        }
+        
+        if( brackets == 1 ) {
+            throw asm_exception("] final nao encontrado");
+        }
+        
+        auto its = ito+1;
+        auto ite = itf-1;
+        for(auto it=its; it != ite;) {
+            expr->true_body.reset( new FuncExpr() );
+            it = parseCmd(expr->true_body, range, it);
+        }
+
+        found = true;
+        ++itf; //after last ]
+        return itf;
+    }
+    found = false;
+    return range.end();
+}
+
+
 TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it)
 {
     using namespace Utils;
     bool found = false;
 
-    TokenProcessor::Iterator itr = check_and_parse<BuiltIn>(parent, range, it, found);
+    TokenProcessor::Iterator itr = check_and_parse<BuiltInExpr>(parent, range, it, found);
     if( found ) return itr;
 
     itr = check_and_parse<VarExpr>(parent, range, it, found);
@@ -89,57 +142,11 @@ TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcess
 
     itr = check_and_parse<CompExpr>(parent, range, it, found);
     if( found ) return itr;
+
+    itr = check_and_parse<CompExpr>(parent, range, it, found);
+    if( found ) return itr;
     
     throw asm_exception(it->line, "Funcao invalida: " + it->cmd);
-
-//    for(; it != range.end(); it++) {
-//
-//        
-//        Expr *expr = BuiltIn::create_if(token.cmd);
-//        if( expr != nullptr ) {
-//            expr->parse(token.line, token.cmd, token.params);
-//        }
-//        
-//        if(is_equal("escreva", token.cmd)) {
-//            if( token.params.empty() ) {
-//                throw asm_exception(token.line, "Escreva precisa de ao menos um parametro");
-//            }
-//            //auto call = std::make_shared<CallExpr>();
-//            std::shared_ptr<CallExpr> call( new CallExpr() );
-//            call->parse(token.line, token.cmd, token.params);
-//            parent->addBody(call);
-//
-//            break;
-//        } else if( is_equal("pergunta", token.cmd) ) {
-//            if( token.params.size() != 3 ) {
-//                throw asm_exception(token.line, "Pergunta deve ter 3 parametros!");
-//            }
-//            //auto call = std::make_shared<CallExpr>();
-//            std::shared_ptr<CallExpr> call( new CallExpr() );
-//            //Pergunta xxx em var_name
-//            call->parse(token.line, token.cmd, { token.params[0], token.params[2] });
-//            parent->addBody(call);
-//            break;
-//        } else if( is_equal("defina", token.cmd) ) {
-//            std::shared_ptr<VarExpr> var( new VarExpr() );
-//            var->parse(token.line, token.cmd, token.params);
-//            parent->addBody(var);
-//            break;
-//        } else if( is_equal("se", token.cmd) ) {
-//            std::shared_ptr<CompExpr> var( new CompExpr() );
-//            var->parse(token.line, token.cmd, token.params);
-//            parent->addBody(var);
-//            break;
-//        } else {
-//            if( token.params.empty() ) {
-//                throw asm_exception(token.line, "Funcao invalida: " + token.cmd);
-//            }
-//        }
-//
-//    }
-//
-//    return it;
-
 }
 
 void AstGenerator::finish()

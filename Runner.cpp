@@ -15,22 +15,27 @@ namespace builtin {
     
     using namespace generator;
     using namespace std;
+    using namespace Utils;
+    
+    std::string get_val(VarsType &vars, const std::string &name) {
+        
+        if( Utils::is_value(name) )
+            return Utils::get_value(name);
+        
+        auto it = vars.find(name);
+        if( it != vars.end() )
+            return it->second;
+        else {
+            //TODO: Gerar um runtime_exception
+            cerr << "Variavel " << name << " nao encontrada" << endl;
+            return "";
+        }
+    }
     
     void escreva(VarsType &vars, CallExpr *expr) {
                 
         for (auto t : expr->params) {
-            if( Utils::is_value(t) ) {
-                cout << Utils::get_value(t);
-            } else {
-                //t => variable
-                auto it = vars.find(t);
-                if( it != vars.end() )
-                    cout << it->second;
-                else {
-                    //TODO: Gerar um runtime_exception
-                    cerr << "Variavel " << t << " nao encontrada" << endl;
-                }
-            }
+            cout << get_val(vars, t);
         }
         cout << endl;
         
@@ -59,7 +64,49 @@ namespace builtin {
             vars[name] = v;
         }
     }
-
+    
+    void se(Runner &runner, VarsType &vars, CompExpr *comp) {
+        
+        std::string l, r;
+        l = get_val(vars, comp->params[0]);
+        r = get_val(vars, comp->params[1]);
+        
+        if( l == r ) {
+            //true
+            if( comp->true_body )
+                runner.run(comp->true_body);
+        } else {
+            //false body
+        }
+        
+        
+        
+    }
+    
+    bool check(VarsType &vars, Expr::ExprPtr expr) {
+        
+        VarExpr *ve = dynamic_cast<VarExpr *>(expr.get());
+        if( ve != nullptr ) {
+            builtin::defina(vars, ve);
+            return true;
+        }
+        
+        BuiltInExpr *e = dynamic_cast<BuiltInExpr *>(expr.get());
+        if( e == nullptr ) {
+            return false;
+        }
+        
+        if( is_equal(e->getName(), "escreva") ) {
+            builtin::escreva(vars, e);
+        }
+        else if( is_equal(e->getName(), "pergunta") ) {
+            builtin::pergunta(vars, e);
+        }
+        
+        return true;
+        
+    }
+    
 }
 
 void Runner::run(generator::FuncExprPtr func)
@@ -74,29 +121,15 @@ void Runner::run(generator::FuncExprPtr func)
 
     //std::string root = "@";
 
-    //TODO: change this to call ->exec and run without this fake reflection
     for( auto e : func->body ) {
-        //std::string level = "@" + root;
-
-        //cout << level << " " << e->getName() << endl;
-
-        if( is_equal(e->getName(), "escreva") ) {
-            CallExpr *ce = dynamic_cast<CallExpr *>(e.get());
-            if( ce == nullptr ) {
-                //TODO: Gerar run_time exception
-                cerr << "Expr nao eh uma CallExpr!" << endl;
-            }
-            builtin::escreva(vars, ce);
+        
+        if( builtin::check(vars, e) ) {
+            continue;
         }
-        else if( is_equal(e->getName(), "pergunta") ) {
-            CallExpr *ce = dynamic_cast<CallExpr *>(e.get());
-            builtin::pergunta(vars, ce);
-        } else {
-            
-            VarExpr *ve = dynamic_cast<VarExpr *>(e.get());
-            if( ve != nullptr ) {
-                builtin::defina(vars, ve);
-            }
+        
+        CompExpr *ce = dynamic_cast<CompExpr *>(e.get());
+        if( ce != nullptr ) {
+            builtin::se(*this, vars, ce);
         }
         
     }

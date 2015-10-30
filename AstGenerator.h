@@ -73,10 +73,10 @@ namespace generator {
     };
     using FuncExprPtr = std::shared_ptr<FuncExpr>;
     
-    struct BuiltIn : public CallExpr {
-        static BuiltIn *create_if(const std::string &name) {
+    struct BuiltInExpr : public CallExpr {
+        static BuiltInExpr *create_if(const std::string &name) {
             if(Utils::is_equal("escreva", name) || Utils::is_equal("pergunta", name) ) {
-                return new BuiltIn();
+                return new BuiltInExpr();
             }
             return nullptr;
         }
@@ -102,6 +102,9 @@ namespace generator {
         void generate(FuncExprPtr parent, TokenProcessor::Range range);
 
         TokenProcessor::Iterator parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it);
+
+        template<typename T>
+        TokenProcessor::Iterator check_and_parse(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &ito, bool &found);
 
         void finish();
 
@@ -141,8 +144,8 @@ namespace generator {
     
     struct CompExpr : public Expr {
         
-        std::vector<ExprPtr> true_body;
-        std::vector<ExprPtr> false_body;
+        FuncExprPtr true_body;
+        FuncExprPtr false_body;
         std::vector<std::string> params;
         
         static CompExpr *create_if(const std::string &name) {

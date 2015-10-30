@@ -1,28 +1,26 @@
 
-#escreva 'Ola, tudo bem ?'
+escreva 'Ola, tudo bem ?'
 
 #escreva 'Como vai você ?'
 
-pergunta 'Digite o seu nome: ' em resposta
+#pergunta 'Digite o seu nome: ' em resposta
 #escreva 'Como vai você ' + resposta + "?"
 
-#defina 1 em valor
-#escreva 'valor: ' + valor
+defina 1 em valor
 
-#defina valor em valor2
-#escreva 'valor2: ' + valor2
+se valor for 1
+[
+	defina 2 em valor
+    escreva 'Novo: ' + valor
+]
+#senao [
+#	defina 3 em valor
+#]
+#    se "1" for "1"
+
+escreva "Fim!"
 
 #defina valor + 1 em v2
 #defina valor - 1 em v2
 #defina valor * 1 em v2
 #defina valor / 1 em v2
-
-
-#se valor for 1
-#[
-#	defina 2 em valor
-#	escreva 'Ola, tudo bem ?'
-#] senao [
-#	defina 3 em valor
-#]
-#    se "1" for "1"
