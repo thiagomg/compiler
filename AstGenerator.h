@@ -23,7 +23,7 @@ namespace generator {
         
         virtual void setName(const std::string &name) { this->name = name; }
         virtual const std::string &getName() { return name; }
-
+        
     private:
         std::string name;
         
@@ -33,6 +33,12 @@ namespace generator {
 
         std::vector<std::string> params;
         std::vector<ExprPtr> body;
+        
+        static FuncExpr *create_if(const std::string &name) {
+            if( name == "rotina" )
+                return new FuncExpr();
+            return nullptr;
+        }
 
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
             //this->name = name;
@@ -50,6 +56,13 @@ namespace generator {
     using FuncExprPtr = std::shared_ptr<FuncExpr>;
 
     struct CallExpr : public generator::Expr {
+        
+        static CallExpr *create_if(const std::string &name) {
+            if( name == "rotina" )
+                return new CallExpr();
+            return nullptr;
+        }
+
         std::vector<std::string> params;
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
             //This is easy.
@@ -59,6 +72,27 @@ namespace generator {
         
     };
     using FuncExprPtr = std::shared_ptr<FuncExpr>;
+    
+    struct BuiltIn : public CallExpr {
+        static BuiltIn *create_if(const std::string &name) {
+            if(Utils::is_equal("escreva", name) || Utils::is_equal("pergunta", name) ) {
+                return new BuiltIn();
+            }
+            return nullptr;
+        }
+        
+        virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
+            //This is easy.
+            setName(name);
+            if( name == "escreva" )
+                this->params = params;
+            else if( name == "pergunta" )
+                this->params = { params[0], params[2] };
+
+        }
+
+        
+    };
     
     class AstGenerator {
     public:
@@ -82,7 +116,11 @@ namespace generator {
         
         std::string value;
         
-        //FIXME: Por hora soh sera aceito +-*/, mas depois deve virar uma arvore
+        static VarExpr *create_if(const std::string &name) {
+            if( name == "defina" )
+                return new VarExpr();
+            return nullptr;
+        }
         
         virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
             if( !Utils::is_equal(name, "defina") ) {
@@ -99,6 +137,37 @@ namespace generator {
             
         }
         virtual ~VarExpr() {}
+    };
+    
+    struct CompExpr : public Expr {
+        
+        std::vector<ExprPtr> true_body;
+        std::vector<ExprPtr> false_body;
+        std::vector<std::string> params;
+        
+        static CompExpr *create_if(const std::string &name) {
+            if( name == "se" )
+                return new CompExpr();
+            return nullptr;
+        }
+        
+        virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
+            //este eh um SE xxx for yyy
+            if( !Utils::is_equal(name, "se") ) {
+                throw asm_exception(line, "defina nao esta com o nome defina");
+            }
+            
+            //defina 2 em valor
+            if( params.size() != 3 )
+                throw asm_exception(line, "numero de parametros incorretos em se: ", params);
+            
+            this->params.push_back(params[0]);
+            this->params.push_back(params[2]);
+            
+            //varUtils.validateVar(line, params[0]);
+            //varUtils.validateVar(line, params[1]);
+        }
+        virtual ~CompExpr() {};
     };
 
 
