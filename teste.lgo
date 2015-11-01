@@ -10,13 +10,16 @@ defina 1 em valor
 
 se valor for 1
 [
-	defina 2 em valor
-    escreva 'Novo: ' + valor
+    #defina 2 em valor
+    #escreva 'Novo: ' + valor
+    escreva 'Se - linha 1'
+    escreva 'Se - linha 2'
 ]
 #senao [
-#	defina 3 em valor
+	#defina 3 em valor
+#    escreva 'Senao - linha 1'
+#    escreva 'Senao - linha 2'
 #]
-#    se "1" for "1"
 
 escreva "Fim!"
 

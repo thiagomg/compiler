@@ -93,27 +93,6 @@ namespace generator {
 
         
     };
-    
-    class AstGenerator {
-    public:
-
-        AstGenerator(TokenProcessor &processor);
-        void generate();
-        void generate(FuncExprPtr parent, TokenProcessor::Range range);
-
-        TokenProcessor::Iterator parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it);
-
-        template<typename T>
-        TokenProcessor::Iterator check_and_parse(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &ito, bool &found);
-
-        void finish();
-
-        std::string getCode();
-
-        FuncExprPtr _mainExpr;
-        TokenProcessor &_processor;
-
-    };
 
     struct VarExpr : public Expr {
         
@@ -173,6 +152,31 @@ namespace generator {
         virtual ~CompExpr() {};
     };
 
+    
+    class AstGenerator {
+    public:
+        
+        AstGenerator(TokenProcessor &processor);
+        void generate();
+        void generate(FuncExprPtr parent, TokenProcessor::Range range);
+        
+        TokenProcessor::Iterator parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it);
+        
+        template<typename T>
+        TokenProcessor::Iterator check_and_parse(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &ito, bool &found);
+        
+        TokenProcessor::Iterator count_brackets(TokenProcessor::Iterator &first, TokenProcessor::Range &range);
+        void add_cmds(CompExpr *expr, TokenProcessor::Range &range, TokenProcessor::Iterator &first, TokenProcessor::Iterator &last);
+        
+        
+        void finish();
+        
+        std::string getCode();
+        
+        FuncExprPtr _mainExpr;
+        TokenProcessor &_processor;
+        
+    };
 
 }
 #endif //COMPILER_ASTGENERATOR_H

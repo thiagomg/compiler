@@ -76,6 +76,46 @@ TokenProcessor::Iterator AstGenerator::check_and_parse(FuncExprPtr parent, Token
     return range.end();
 }
 
+TokenProcessor::Iterator AstGenerator::count_brackets(TokenProcessor::Iterator &first, TokenProcessor::Range &range) {
+    
+    TokenProcessor::Iterator last = first;
+
+    //O primeiro precisa ser um [
+    if( first->cmd != "[" )
+        throw asm_exception("Apos um comando se, eh obrigatorio haver [");
+    
+    int brackets = 1;
+    ++last; //We've passed the first opened bracket already.
+    
+    //vamos agora procurar onde fecha o parentese
+    for(; last != range.end(); ++last) {
+        CmdToken &c = *last;
+        if( c.cmd == "[" )
+            brackets++;
+        else if( c.cmd == "]" )
+            brackets--;
+        if( brackets == 0 )
+            break;
+    }
+    
+    return last;
+}
+
+void AstGenerator::add_cmds(CompExpr *expr, TokenProcessor::Range &range, TokenProcessor::Iterator &first, TokenProcessor::Iterator &last) {
+    //I don't need to decrement the end position. [b:e)
+    ++first;
+    if( first != last ) {
+        expr->true_body.reset( new FuncExpr() );
+        while(first != last) {
+            //parseCmd will increment.
+            first = parseCmd(expr->true_body, range, first);
+        }
+    }
+    
+    ++last; //after last
+
+}
+
 template<>
 TokenProcessor::Iterator AstGenerator::check_and_parse<CompExpr>(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &ito, bool &found) {
     
@@ -90,38 +130,25 @@ TokenProcessor::Iterator AstGenerator::check_and_parse<CompExpr>(FuncExprPtr par
         ++ito;
 
         //Vamos agora procurar o começo e final
-        TokenProcessor::Iterator itf = ito;
+        TokenProcessor::Iterator itf = count_brackets(ito, range);
         
-        //O primeiro precisa ser um [
-        if( ito->cmd != "[" )
-            throw asm_exception("Apos um comando se, eh obrigatorio haver [");
-        
-        int brackets = 1;
-        
-        //vamos agora procurar onde fecha o parentese
-        for(; itf != range.end(); ++itf) {
-            CmdToken &c = *itf;
-            if( c.cmd == "[" )
-                brackets++;
-            else if( c.cmd == "]" )
-                brackets--;
-            if( brackets == 0 )
-                break;
-        }
-        
-        if( brackets == 1 ) {
+        int brackets = std::distance(ito, itf);
+        if( brackets <= 1 ) {
             throw asm_exception("] final nao encontrado");
         }
         
-        auto its = ito+1;
-        auto ite = itf-1;
-        for(auto it=its; it != ite;) {
-            expr->true_body.reset( new FuncExpr() );
-            it = parseCmd(expr->true_body, range, it);
-        }
-
+        add_cmds(expr, range, ito, itf);
         found = true;
-        ++itf; //after last ]
+        
+        //Do we have else ?
+        if( Utils::is_equal(itf->cmd, "senao" ) ) {
+            
+            
+            
+            
+            
+        }
+        
         return itf;
     }
     found = false;
