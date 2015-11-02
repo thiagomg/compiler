@@ -6,9 +6,6 @@
 #include "utils.h"
 
 #include <iostream>
-#include <unordered_map>
-
-using VarsType = std::unordered_map<std::string, std::string>;
 
 //built-in
 namespace builtin {
@@ -17,7 +14,7 @@ namespace builtin {
     using namespace std;
     using namespace Utils;
     
-    std::string get_val(VarsType &vars, const std::string &name) {
+    std::string get_val(Runner::VarsType &vars, const std::string &name) {
         
         if( Utils::is_value(name) )
             return Utils::get_value(name);
@@ -32,7 +29,7 @@ namespace builtin {
         }
     }
     
-    void escreva(VarsType &vars, CallExpr *expr) {
+    void escreva(Runner::VarsType &vars, CallExpr *expr) {
                 
         for (auto t : expr->params) {
             cout << get_val(vars, t);
@@ -41,7 +38,7 @@ namespace builtin {
         
     }
     
-    void pergunta(VarsType &vars, CallExpr *expr) {
+    void pergunta(Runner::VarsType &vars, CallExpr *expr) {
         const string &text = expr->params[0];
         cout << Utils::get_value(text);
         cout.flush();
@@ -52,7 +49,7 @@ namespace builtin {
         });
     }
 
-    void defina(VarsType &vars, VarExpr *expr) {
+    void defina(Runner::VarsType &vars, VarExpr *expr) {
         const string &name = expr->getName();
         const string &value = expr->value;
         
@@ -65,7 +62,7 @@ namespace builtin {
         }
     }
     
-    void se(Runner &runner, VarsType &vars, CompExpr *comp) {
+    void se(Runner &runner, Runner::VarsType &vars, CompExpr *comp) {
         
         std::string l, r;
         l = get_val(vars, comp->params[0]);
@@ -76,14 +73,16 @@ namespace builtin {
             if( comp->true_body )
                 runner.run(comp->true_body);
         } else {
-            //false body
+            //false
+            if( comp->false_body )
+                runner.run(comp->false_body);
         }
         
         
         
     }
     
-    bool check(VarsType &vars, Expr::ExprPtr expr) {
+    bool check(Runner::VarsType &vars, Expr::ExprPtr expr) {
         
         VarExpr *ve = dynamic_cast<VarExpr *>(expr.get());
         if( ve != nullptr ) {
@@ -109,18 +108,20 @@ namespace builtin {
     
 }
 
-void Runner::run(generator::FuncExprPtr func)
+//TODO: Trocar chamadas recursivas para este
+void Runner::_run(Runner::VarsType &parentVars, generator::FuncExprPtr func)
 {
+    
     using namespace std;
     using namespace generator;
     using namespace Utils;
-
+    
     VarsType vars;
     
     //built-in
-
+    
     //std::string root = "@";
-
+    
     for( auto e : func->body ) {
         
         if( builtin::check(vars, e) ) {
@@ -134,5 +135,11 @@ void Runner::run(generator::FuncExprPtr func)
         
     }
 
+    
+}
 
+void Runner::run(generator::FuncExprPtr func)
+{
+    Runner::VarsType vars;
+    _run(vars, func);
 }

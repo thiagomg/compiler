@@ -80,10 +80,6 @@ TokenProcessor::Iterator AstGenerator::count_brackets(TokenProcessor::Iterator &
     
     TokenProcessor::Iterator last = first;
 
-    //O primeiro precisa ser um [
-    if( first->cmd != "[" )
-        throw asm_exception("Apos um comando se, eh obrigatorio haver [");
-    
     int brackets = 1;
     ++last; //We've passed the first opened bracket already.
     
@@ -101,18 +97,23 @@ TokenProcessor::Iterator AstGenerator::count_brackets(TokenProcessor::Iterator &
     return last;
 }
 
-void AstGenerator::add_cmds(CompExpr *expr, TokenProcessor::Range &range, TokenProcessor::Iterator &first, TokenProcessor::Iterator &last) {
+FuncExprPtr AstGenerator::add_cmds(CompExpr *expr, TokenProcessor::Range &range, TokenProcessor::Iterator &first, TokenProcessor::Iterator &last) {
+    
+    FuncExprPtr f;
+    
     //I don't need to decrement the end position. [b:e)
     ++first;
     if( first != last ) {
-        expr->true_body.reset( new FuncExpr() );
+        f.reset( new FuncExpr() );
         while(first != last) {
             //parseCmd will increment.
-            first = parseCmd(expr->true_body, range, first);
+            first = parseCmd(f, range, first);
         }
     }
     
     ++last; //after last
+    
+    return f;
 
 }
 
@@ -127,7 +128,13 @@ TokenProcessor::Iterator AstGenerator::check_and_parse<CompExpr>(FuncExprPtr par
         generator::Expr::ExprPtr p(expr);
         parent->addBody(p);
         
+        //Moving from _se_ to _[_
         ++ito;
+
+        //O primeiro token apos se precisa ser um [
+        if( ito->cmd != "[" )
+            throw asm_exception("Apos um comando se, eh obrigatorio haver [");
+        
 
         //Vamos agora procurar o começo e final
         TokenProcessor::Iterator itf = count_brackets(ito, range);
@@ -137,15 +144,30 @@ TokenProcessor::Iterator AstGenerator::check_and_parse<CompExpr>(FuncExprPtr par
             throw asm_exception("] final nao encontrado");
         }
         
-        add_cmds(expr, range, ito, itf);
+        expr->true_body = add_cmds(expr, range, ito, itf);
         found = true;
         
         //Do we have else ?
         if( Utils::is_equal(itf->cmd, "senao" ) ) {
             
+            ++itf;
+            ito = itf;
             
+            //Moving from _senao_ to _[_
             
+            //O primeiro token apos se precisa ser um [
+            if( ito->cmd != "[" )
+                throw asm_exception("Apos um comando se, eh obrigatorio haver [");
             
+            itf = count_brackets(ito, range);
+            
+            int brackets = std::distance(ito, itf);
+            if( brackets <= 1 ) {
+                throw asm_exception("] final nao encontrado");
+            }
+            
+            expr->false_body = add_cmds(expr, range, ito, itf);
+            found = true;
             
         }
         

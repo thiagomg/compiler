@@ -1,25 +1,23 @@
 
 escreva 'Ola, tudo bem ?'
 
-#escreva 'Como vai você ?'
-
 #pergunta 'Digite o seu nome: ' em resposta
 #escreva 'Como vai você ' + resposta + "?"
 
 defina 1 em valor
 
-se valor for 1
+se valor for 2
 [
     #defina 2 em valor
     #escreva 'Novo: ' + valor
     escreva 'Se - linha 1'
     escreva 'Se - linha 2'
 ]
-#senao [
+senao [
 	#defina 3 em valor
-#    escreva 'Senao - linha 1'
-#    escreva 'Senao - linha 2'
-#]
+    escreva 'Senao - linha 1'
+    escreva 'Senao - linha 2'
+]
 
 escreva "Fim!"
 

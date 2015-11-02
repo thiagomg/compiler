@@ -8,11 +8,18 @@
 //TODO: Move to Expressions.h
 #include "AstGenerator.h"
 
+#include <unordered_map>
 
 class Runner {
 public:
     void run(generator::FuncExprPtr func);
+    
+    using VarsType = std::unordered_map<std::string, std::string>;
 
+protected:
+    void _run(VarsType &vars, generator::FuncExprPtr func);
+
+    
 };
 
 
