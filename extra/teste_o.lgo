@@ -1,0 +1,50 @@
+
+#pergunta 'qual o seu nome' em resposta
+
+
+
+se valor for 1
+[
+    se resposta for 'papai'
+    [
+        escreva "uma vez"
+    ]
+
+    escreva 'outra vez'
+
+    repita 3 vezes
+    [
+        escreva "1!!!"
+        se 4 for 4
+        [
+            escreva "4!!!"
+        ]
+    ]
+]
+#    se "1" for "1"
+
+
+rotina quad
+[
+	pf 100
+	gd 90
+	pt 100
+	ge 190
+	pf 100
+]
+
+executa quad
+cor verde
+
+escreva "ola tudo bem"
+pergunta 'qual o seu nome' em resposta
+escreva resposta
+
+
+:main
+
+WRITE "ola tudo bem"
+READ RESP, "qual o seu nome"
+WRITE RESP
+
+

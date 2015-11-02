@@ -7,6 +7,7 @@
 
 #include <exception>
 #include <string>
+#include <vector>
 
 struct asm_exception : std::exception
 {
@@ -16,16 +17,24 @@ struct asm_exception : std::exception
 
     asm_exception(const std::string &s)
     {
-        //std::copy(begin(s), end(s), begin(text));
         _text = s;
     }
 
     asm_exception(int line, const std::string &s)
     {
-        //std::string sline;
         _text.reserve(24 + s.size());
         _text = "Linha: " + std::to_string(line) + ": " + s;
-        //std::copy(begin(sline), end(sline), begin(text));
+    }
+
+    asm_exception(int line, const std::string &s, const std::vector<std::string> &params)
+    {
+        _text.reserve(24 + s.size());
+        _text = "Linha: " + std::to_string(line) + ": " + s + " (";
+        for(const auto &p : params) {
+            _text += p;
+            _text += " ";
+        }
+        _text += ")";
     }
 /*
     asm_exception(char const* fmt, ...) __attribute__((format(printf,2,3))) {

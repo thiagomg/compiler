@@ -1,14 +1,16 @@
-#include <stdio.h>
+//#include <stdio.h>
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <functional>
 #include <memory>
+#include <sstream>
 
 #include "QuotedWord.h"
 #include "TokenProcessor.h"
-#include "CppGenerator.h"
+#include "AstGenerator.h"
+#include "Runner.h"
 
 using namespace std;
 using namespace generator;
@@ -83,15 +85,18 @@ void parse_file(ifstream &is, function<bool(int line_num, const vector<string> &
 
 int main( /*int argc, char **argv */)
 {
-    unique_ptr<CppGenerator> generator( new CppGenerator() );
-    TokenProcessor proc(generator.get());
-    
+    //unique_ptr<CppGenerator> generator( new CppGenerator() );
+    TokenProcessor proc; //(generator.get());
+    unique_ptr<AstGenerator> generator( new AstGenerator(proc) );
+
     string fname = "teste.lgo";
 
     ifstream is(fname.c_str());
     try {
 
         if( is.good() ) {
+
+
 			//parse_file quebra em linhas e manda um vector 
 			//para o processador de tokens
             parse_file(is, [&proc](int line_num, const vector<string> &line_chunks) {
@@ -99,8 +104,8 @@ int main( /*int argc, char **argv */)
 				return proc.add(line_num, line_chunks);
             });
 
-            vector<string> v;
-            proc.add(-1, v);
+            generator->generate();
+            generator->finish();
         } else
             cerr << "Erro abrindo arquivo: " << fname << endl;
 	
@@ -113,15 +118,20 @@ int main( /*int argc, char **argv */)
     //cout << "Fim" << endl;
 	//getchar();
 
+
     if(is.is_open())
         is.close();
 
     //cout << generator->finish() << endl;
 
-	fstream fout;
-	fout.open("teste.cpp", fstream::out );
-	fout << generator->finish();
-	fout.close();
+//	fstream fout;
+//	fout.open("teste.cpp", fstream::out );
+//	fout << generator->getCode();
+//	fout.close();
+
+    Runner runner;
+    runner.run(generator->_mainExpr);
+
 
     return 0;
 }

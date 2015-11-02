@@ -17,6 +17,14 @@ senao [
 	#defina 3 em valor
     escreva 'Senao - linha 1'
     escreva 'Senao - linha 2'
+
+    se valor for 2 [
+    	escreva 'senao se 2'
+    ] senao [
+    	escreva 'senao senao 2'
+    ]
+
+
 ]
 
 escreva "Fim!"

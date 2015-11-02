@@ -2,6 +2,7 @@
 .kdev4/
 build/
 *.pro.user
+CMakeFiles/
 
 # Compiled Object files
 *.slo
@@ -31,3 +32,14 @@ build/
 *.exe
 *.out
 *.app
+
+.qmake.stash
+
+cmake_install.cmake
+
+CMakeLists.txt.user
+
+CMakeScripts/
+compiler.build/
+compiler.xcodeproj/
+Debug/

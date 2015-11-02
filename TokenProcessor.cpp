@@ -8,16 +8,13 @@
 #include "TokenProcessor.h"
 
 #include <iostream>
-#include "CppGenerator.h"
 
 using namespace std;
 
-TokenProcessor::TokenProcessor(generator::CppGenerator *generator) {
-    _generator = generator;
-}
 
-//TokenProcessor::TokenProcessor(const TokenProcessor& orig) {
-//}
+TokenProcessor::TokenProcessor() {
+
+}
 
 TokenProcessor::~TokenProcessor() {
 }
@@ -28,7 +25,7 @@ void TokenProcessor::_processCmd(int line_num, const string &cmd, std::vector< s
 //        cout << " " << i ;
 //    cout << endl;
 
-    _generator->addCmd(line_num, cmd,params);
+    _tokens.push_back(CmdToken(line_num, cmd, params));
 
 }
 
@@ -49,22 +46,23 @@ int TokenProcessor::_getSize(const std::string &cmd) {
 	return it->second;
 }
 
+std::vector<CmdToken> &TokenProcessor::tokenList()
+{
+    return _tokens;
+}
+
+TokenProcessor::Range TokenProcessor::getRange()
+{
+    return TokenProcessor::Range(_tokens.begin(), _tokens.end());
+}
+
+
 bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 
 	//Regras:
 	//1. Numero fixo de parametros
 	//2. pode-se juntar mais parametros com +
 	//3. Se tiver mais parametros, devolve mais de um comando.
-
-    if( line_chunks.size() == 0 ) {
-        if( line_num == -1 ) {
-            //end of file. hint.
-            vector<string> params;
-            _processCmd(-1, "", params);
-            cout << "Hint: " << line_num << endl;
-        }
-        return true;
-    }
 
     size_t iterCount = 0;
 	auto it = line_chunks.begin();
@@ -89,10 +87,12 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 		}
 		
 		//Trocar o cout pela entrada no analisador sintatico
-		cout << line_num << ": " << cmd;
+		cout << line_num << ":	 " << cmd;
+        if( !params.empty() ) cout << " (";
 		for(auto p : params) {
-			cout << " [" << p << "]";
+			cout << " " << p;
 		}
+        if( !params.empty() ) cout << " )";
 		cout << endl;
 
 		_processCmd(line_num, cmd, params);
