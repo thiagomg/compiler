@@ -1,27 +1,2 @@
 
-escreva 'Ola, tudo bem ?'
-
-#pergunta 'Digite o seu nome: ' em resposta
-#escreva 'Como vai você ' + resposta + "?"
-
-defina 1 em valor
-
-se valor for 2
-[
-    #defina 2 em valor
-    #escreva 'Novo: ' + valor
-    escreva 'Se - linha 1'
-    escreva 'Se - linha 2'
-]
-senao [
-	#defina 3 em valor
-    escreva 'Senao - linha 1'
-    escreva 'Senao - linha 2'
-]
-
-escreva "Fim!"
-
-#defina valor + 1 em v2
-#defina valor - 1 em v2
-#defina valor * 1 em v2
-#defina valor / 1 em v2
+calcula [3 + 1] em valor2

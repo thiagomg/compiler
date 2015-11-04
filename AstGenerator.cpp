@@ -51,9 +51,9 @@ void AstGenerator::generate(FuncExprPtr parent, TokenProcessor::Range range)
     while(it != range.end()) {
         it = parseCmd(parent, range, it);
         //DEBUG
-        if( it != range.end() ) {
-            cout << "Parsed: " << it->cmd << endl;
-        }
+//        if( it != range.end() ) {
+//            cout << "Parsed: " << it->cmd << endl;
+//        }
     }
 
 }
@@ -177,6 +177,56 @@ TokenProcessor::Iterator AstGenerator::check_and_parse<CompExpr>(FuncExprPtr par
     return range.end();
 }
 
+template<>
+TokenProcessor::Iterator AstGenerator::check_and_parse<CalcExpr>(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &ito, bool &found) {
+    
+    CmdToken &token = *ito;
+    
+    CalcExpr *expr = CalcExpr::create_if(token.cmd);
+    if( expr != nullptr ) {
+        expr->parse(token.line, token.cmd, token.params);
+        generator::Expr::ExprPtr p(expr);
+        parent->addBody(p);
+        
+        //Moving from _se_ to _[_
+        ++ito;
+        
+        //O primeiro token apos se precisa ser um [
+        if( ito->cmd != "[" )
+            throw asm_exception("Apos um comando se, eh obrigatorio haver [");
+        
+        
+        //Vamos agora procurar o começo e final
+        TokenProcessor::Iterator itf = count_brackets(ito, range);
+        
+        int brackets = std::distance(ito, itf);
+        if( brackets <= 1 ) {
+            throw asm_exception("] final nao encontrado");
+        }
+        
+        ++ito; //calcula -> [
+        std::string &buf = expr->calc_string;
+        std::for_each(ito, itf, [&buf](CmdToken &s) {
+            buf += s.cmd + " ";
+        });
+        
+        ++itf; //] -> em
+        if( !Utils::is_equal(itf->cmd,"em") ) {
+            throw asm_exception("token 'em' nao encontrado");
+        }
+        
+        ++itf; //em -> variable
+        expr->var_name = itf->cmd;
+        
+        ++itf;
+
+        found = true;
+        return itf;
+    }
+    found = false;
+    return range.end();
+}
+
 
 TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcessor::Range &range, TokenProcessor::Iterator &it)
 {
@@ -193,6 +243,9 @@ TokenProcessor::Iterator AstGenerator::parseCmd(FuncExprPtr parent, TokenProcess
     if( found ) return itr;
 
     itr = check_and_parse<CompExpr>(parent, range, it, found);
+    if( found ) return itr;
+    
+    itr = check_and_parse<CalcExpr>(parent, range, it, found);
     if( found ) return itr;
     
     throw asm_exception(it->line, "Funcao invalida: " + it->cmd);

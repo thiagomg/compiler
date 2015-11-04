@@ -12,14 +12,16 @@
 
 class Runner {
 public:
+    //using VarsType = std::unordered_map<std::string, std::string>;
+    using VarType = std::pair<std::string, std::string>;
+    using VarsType = std::vector<VarType>;
+
     void run(generator::FuncExprPtr func);
+    void _run(VarsType &vars, generator::FuncExprPtr func);
     
-    using VarsType = std::unordered_map<std::string, std::string>;
 
 protected:
-    void _run(VarsType &vars, generator::FuncExprPtr func);
 
-    
 };
 
 

@@ -4,6 +4,7 @@
 
 #include "Runner.h"
 #include "utils.h"
+#include "infix_parser.h"
 
 #include <iostream>
 
@@ -14,19 +15,41 @@ namespace builtin {
     using namespace std;
     using namespace Utils;
     
-    std::string get_val(Runner::VarsType &vars, const std::string &name) {
+    std::string *get_var(Runner::VarsType &vars, const std::string &name, bool add_if = false) {
+        auto it = std::find_if(begin(vars), end(vars), [&name](Runner::VarType &p) {
+            return( is_equal(p.first, name) );
+        });
+        
+        if( it != vars.end() )
+            return &(it->second);
+        
+        if( !add_if )
+            return nullptr;
+        
+        vars.push_back( make_pair(name, string() ) );
+        auto &pair = vars.back();
+        return &(pair.second);
+        
+    }
+    
+    const std::string get_val(Runner::VarsType &vars, const std::string &name) {
         
         if( Utils::is_value(name) )
             return Utils::get_value(name);
         
-        auto it = vars.find(name);
-        if( it != vars.end() )
-            return it->second;
+        string *v = get_var(vars, name);
+        if( v != nullptr )
+            return *v;
         else {
             //TODO: Gerar um runtime_exception
             cerr << "Variavel " << name << " nao encontrada" << endl;
             return "";
         }
+    }
+    
+    void set_val(Runner::VarsType &vars, const std::string &name, const std::string &val) {
+        string *v = get_var(vars, name, true);
+        *v = val;
     }
     
     void escreva(Runner::VarsType &vars, CallExpr *expr) {
@@ -45,7 +68,7 @@ namespace builtin {
         for_each(begin(expr->params)+1, end(expr->params), [&vars, &text](auto &var_name) {
             string val;
             cin >> val;
-            vars[var_name] = val;
+            set_val(vars, var_name, val);
         });
     }
 
@@ -53,12 +76,15 @@ namespace builtin {
         const string &name = expr->getName();
         const string &value = expr->value;
         
+        
         if( Utils::is_value(value) ) {
-            vars[name] = value;
+            set_val(vars, name, value);
         } else {
             //Setting one var to another
-            const std::string &v = vars[value];
-            vars[name] = v;
+            string s = get_val(vars, value);
+            set_val(vars, name, s);
+            //const std::string &v = vars[value];
+            //vars[name] = v;
         }
     }
     
@@ -71,15 +97,25 @@ namespace builtin {
         if( l == r ) {
             //true
             if( comp->true_body )
-                runner.run(comp->true_body);
+                runner._run(vars, comp->true_body);
         } else {
             //false
             if( comp->false_body )
-                runner.run(comp->false_body);
+                runner._run(vars, comp->false_body);
         }
         
-        
-        
+    }
+    
+    //TODO: Acertar um parser infix que funcione!!!
+    void calcula(Runner::VarsType &vars, CalcExpr *expr) {
+        cout << "Calcula: " << expr->var_name << " -> " << expr->calc_string << endl;
+        std::string v = get_value(expr->calc_string);
+        double ret = alien::parse(v);
+        if( (ret / (int)ret) == 1 ) {
+            set_val(vars, expr->var_name, std::to_string((int)ret));
+        } else {
+            set_val(vars, expr->var_name, std::to_string(ret));
+        }
     }
     
     bool check(Runner::VarsType &vars, Expr::ExprPtr expr) {
@@ -90,11 +126,17 @@ namespace builtin {
             return true;
         }
         
+        CalcExpr *ce = dynamic_cast<CalcExpr *>(expr.get());
+        if( ce != nullptr ) {
+            calcula(vars, ce);
+            return true;
+        }
+        
         BuiltInExpr *e = dynamic_cast<BuiltInExpr *>(expr.get());
         if( e == nullptr ) {
             return false;
         }
-        
+
         if( is_equal(e->getName(), "escreva") ) {
             builtin::escreva(vars, e);
         }
@@ -116,7 +158,7 @@ void Runner::_run(Runner::VarsType &parentVars, generator::FuncExprPtr func)
     using namespace generator;
     using namespace Utils;
     
-    VarsType vars;
+    int size = parentVars.size();
     
     //built-in
     
@@ -124,17 +166,18 @@ void Runner::_run(Runner::VarsType &parentVars, generator::FuncExprPtr func)
     
     for( auto e : func->body ) {
         
-        if( builtin::check(vars, e) ) {
+        if( builtin::check(parentVars, e) ) {
             continue;
         }
         
         CompExpr *ce = dynamic_cast<CompExpr *>(e.get());
         if( ce != nullptr ) {
-            builtin::se(*this, vars, ce);
+            builtin::se(*this, parentVars, ce);
         }
         
     }
-
+    
+    parentVars.resize(size);
     
 }
 

@@ -151,7 +151,33 @@ namespace generator {
         }
         virtual ~CompExpr() {};
     };
-
+    
+    struct CalcExpr : public Expr {
+        
+        std::string calc_string;
+        std::string var_name;
+        
+        static CalcExpr *create_if(const std::string &name) {
+            if( name == "calcula" )
+                return new CalcExpr();
+            return nullptr;
+        }
+        
+        virtual void parse(int line, const std::string &name, const std::vector<std::string> &params) override {
+            
+            if( !Utils::is_equal(name, "calcula") ) {
+                throw asm_exception(line, "calcula nao esta com o nome defina");
+            }
+            
+            //if( params.size() != 3 )
+            //    throw asm_exception(line, "numero de parametros incorretos em calcula: ", params);
+            
+            //calc_string = params[0];
+            //var_name = params[2];
+            
+        }
+        virtual ~CalcExpr() {};
+    };
     
     class AstGenerator {
     public:

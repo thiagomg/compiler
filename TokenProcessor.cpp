@@ -75,8 +75,10 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 		int param_count = _getSize(cmd);
 		for(int i=0; i < param_count; i++) {
 			const string &p = *it;
-			params.push_back(p);
-			it++;
+            
+            params.push_back(p);
+
+            it++;
 			
 			if( is_concat(line_chunks, it) ) {
 				param_count+=2;// + next 
@@ -86,7 +88,6 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 			}
 		}
 		
-		//Trocar o cout pela entrada no analisador sintatico
 		cout << line_num << ":	 " << cmd;
         if( !params.empty() ) cout << " (";
 		for(auto p : params) {

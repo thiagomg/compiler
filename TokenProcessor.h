@@ -84,7 +84,8 @@ private:
         {"repita", 2},
         {"defina", 3},
         {"[", 0},
-        {"]", 0}
+        {"]", 0},
+        {"calcula", 0} //Calcule "1*2+4" em valor
     };
 };
 

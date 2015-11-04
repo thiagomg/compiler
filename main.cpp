@@ -32,7 +32,38 @@ void crackLine(vector<string> &line, istringstream &ss) {
 		if( s()[0] == '#' )
 			return;
 		
-		line.push_back( s() );
+        size_t ob = s().find('[');
+        size_t cb = s().find(']');
+        
+        if( ob != string::npos || cb != string::npos ) {
+            //Caractere especial. Devemos separar.
+            
+            auto first = s().begin();
+            std::string temp;
+            temp.reserve(s().size());
+            while( first != s().end() ) {
+                const char c = *first;
+                
+                if( c == '[' || c == ']' ) {
+                    if( !temp.empty() ) {
+                        line.push_back(temp);
+                        temp.clear();
+                    }
+                    line.push_back(std::string(&c, 1));
+                    ++first;
+                    continue;
+                }
+                temp += c;
+                
+                ++first;
+            }
+            if( !temp.empty() ) {
+                line.push_back(temp);
+            }
+            
+        } else {
+       		line.push_back( s() );
+        }
 	}
 		
 }
