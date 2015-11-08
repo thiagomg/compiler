@@ -88,13 +88,43 @@ namespace builtin {
         }
     }
     
+    template<typename T>
+    bool operation(char op, T &l, T &r) {
+        if( op == '=' )
+            return l == r;
+        if( op == '>' )
+            return l > r;
+        if( op == '<' )
+            return l < r;
+        return false;
+    }
+    
+    bool operation_s(char op, const std::string &l, const std::string &r) {
+        if( op == '=' )
+            is_equal(l, r);
+        if( op == '>' )
+            return l > r;
+        if( op == '<' )
+            return l < r;
+        return false;
+    }
+    
     void se(Runner &runner, Runner::VarsType &vars, CompExpr *comp) {
         
         std::string l, r;
         l = get_val(vars, comp->params[0]);
         r = get_val(vars, comp->params[1]);
         
-        if( l == r ) {
+        bool ret = false;
+        if( Utils::is_number(l) && Utils::is_number(r) ) {
+            int64_t il = std::stoll(l);
+            int64_t ir = std::stoll(r);
+            ret = operation(comp->operation, il, ir);
+        } else {
+            ret = operation_s(comp->operation, l, r);
+        }
+        
+        if( ret ) {
             //true
             if( comp->true_body )
                 runner._run(vars, comp->true_body);

@@ -88,13 +88,13 @@ bool TokenProcessor::add(int line_num, const vector<string> &line_chunks) {
 			}
 		}
 		
-		cout << line_num << ":	 " << cmd;
-        if( !params.empty() ) cout << " (";
-		for(auto p : params) {
-			cout << " " << p;
-		}
-        if( !params.empty() ) cout << " )";
-		cout << endl;
+//		cout << line_num << ":	 " << cmd;
+//        if( !params.empty() ) cout << " (";
+//		for(auto p : params) {
+//			cout << " " << p;
+//		}
+//        if( !params.empty() ) cout << " )";
+//		cout << endl;
 
 		_processCmd(line_num, cmd, params);
 		

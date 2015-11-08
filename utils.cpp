@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <string>
 #include <iostream>
+#include <cctype>
 
 namespace Utils {
 
@@ -22,15 +23,26 @@ namespace Utils {
         return false;
     }
 
-    bool is_equal(const std::string &l, const std::string &r) {
-        return is_equal<std::string>(l, r);
+    bool is_equal(const std::string &l, const std::string &r, bool case_sensitive) {
+        if( case_sensitive ) {
+            return is_equal<std::string>(l, r, [](const char l, const char r) {
+                return l == r;
+            });
+        } else {
+            return is_equal<std::string>(l, r, [](const char l, const char r) {
+                return std::toupper(l) == std::toupper(r);
+            });
+        }
     }
     
     std::string get_value(const std::string &s) {
         
         //TODO: Gerar um range para nao fazer copia de string
-        if( s.size() < 2 ) return s;
-        return s.substr(1, s.size() - 2);
+        if( s[0] == '\"' || s[0] == '\'' ) {
+            if( s.size() < 2 ) return s;
+            return s.substr(1, s.size() - 2);
+        }
+        return s;
         
     }
 

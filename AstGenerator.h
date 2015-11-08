@@ -126,6 +126,7 @@ namespace generator {
         FuncExprPtr true_body;
         FuncExprPtr false_body;
         std::vector<std::string> params;
+        char operation = '=';
         
         static CompExpr *create_if(const std::string &name) {
             if( name == "se" )
@@ -145,6 +146,14 @@ namespace generator {
             
             this->params.push_back(params[0]);
             this->params.push_back(params[2]);
+            
+            if( Utils::is_equal(params[1], "for") || Utils::is_equal(params[1], "=") ) {
+                operation = '=';
+            } else if( Utils::is_equal(params[1], ">") ) {
+                operation = '>';
+            } else if( Utils::is_equal(params[1], "<") ) {
+                operation = '<';
+            }
             
             //varUtils.validateVar(line, params[0]);
             //varUtils.validateVar(line, params[1]);
