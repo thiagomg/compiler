@@ -9,6 +9,7 @@
 #include "TokenProcessor.h"
 
 #include <iostream>
+#include <algorithm>
 
 using namespace generator;
 using namespace std;

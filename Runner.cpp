@@ -7,6 +7,7 @@
 #include "infix_parser.h"
 
 #include <iostream>
+#include <algorithm>
 
 //built-in
 namespace builtin {
